@@ -17,6 +17,7 @@ export interface ServiceMetadata {
   healthEndpoint?: string;
 
   // API configuration
+  url?: string;
   apiUrl: string;
   wsUrl?: string;
   openApiSpec?: string;

@@ -303,9 +303,9 @@ function extractParameters(operation: OpenAPIOperation): CommandParameter[] {
         type: mapOpenAPIType(param.schema.type),
         required: param.required || false,
         description: param.description || '',
-        default: param.schema.default,
-        enum: param.schema.enum,
-        format: param.schema.format
+        ...(param.schema.default !== undefined && { default: param.schema.default }),
+        ...(param.schema.enum !== undefined && { enum: param.schema.enum }),
+        ...(param.schema.format !== undefined && { format: param.schema.format })
       });
     }
   }

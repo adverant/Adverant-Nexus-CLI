@@ -23,31 +23,30 @@ export class MCPCommandGenerator {
   private commands: Command[] = [];
   private tools: MCPToolDefinition[] = [];
 
-  constructor(private config: MCPCommandGeneratorConfig = {}) {
-    this.mcpClient = new MCPClient({
-      baseUrl: config.mcpServerUrl || 'http://localhost:9000',
-    });
+  constructor(_config: MCPCommandGeneratorConfig = {}) {
+    this.mcpClient = new MCPClient();
 
     this.toolMapper = createMCPToolMapper();
 
-    this.setupEventListeners();
+    // Event listeners would require extending MCPClient to emit events
+    // this.setupEventListeners();
   }
 
   /**
    * Setup event listeners for client events
+   * TODO: Implement event emitter in MCPClient
    */
-  private setupEventListeners(): void {
-    this.mcpClient.on('health:degraded', () => {
-      console.warn(chalk.yellow('⚠️  MCP system unavailable - operations will be queued'));
-    });
-
-    this.mcpClient.on('health:recovered', () => {
-      console.log(chalk.green('MCP system recovered - processing queued operations'));
-    });
-
-    this.mcpClient.on('operation:queued', (op: any) => {
-      console.log(chalk.yellow(`Operation queued: ${op.operation}`));
-    });
+  private _setupEventListeners(): void {
+    // MCPClient doesn't implement EventEmitter yet
+    // this.mcpClient.on('health:degraded', () => {
+    //   console.warn(chalk.yellow('⚠️  MCP system unavailable - operations will be queued'));
+    // });
+    // this.mcpClient.on('health:recovered', () => {
+    //   console.log(chalk.green('MCP system recovered - processing queued operations'));
+    // });
+    // this.mcpClient.on('operation:queued', (op: any) => {
+    //   console.log(chalk.yellow(`Operation queued: ${op.operation}`));
+    // });
   }
 
   /**
@@ -57,12 +56,13 @@ export class MCPCommandGenerator {
     const spinner = ora('Discovering MCP tools...').start();
 
     try {
-      const health = await this.mcpClient.checkHealth(true);
+      // Check if connected (MCPClient doesn't have checkHealth)
+      const isConnected = this.mcpClient.isConnected();
 
-      if (!health.healthy) {
-        spinner.warn('MCP system unavailable - commands will use fallback mode');
+      if (!isConnected) {
+        spinner.warn('MCP client not connected - commands will use fallback mode');
       } else {
-        spinner.succeed(`MCP system healthy`);
+        spinner.succeed(`MCP client connected`);
       }
 
       this.tools = await this.fetchMCPTools();
@@ -87,12 +87,17 @@ export class MCPCommandGenerator {
    */
   private async fetchMCPTools(): Promise<MCPToolDefinition[]> {
     try {
-      const response = await this.mcpClient.request<{ tools: MCPToolDefinition[] }>(
-        '/tools',
-        'GET'
-      );
+      // MCPClient uses listTools() method, not request()
+      const tools = await this.mcpClient.listTools();
 
-      return response.tools || [];
+      // Convert MCPTool to MCPToolDefinition format
+      return tools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        category: 'mcp',
+        params: tool.inputSchema?.properties || {},
+        returns: tool.outputSchema || { type: 'object' },
+      })) as any;
     } catch (error) {
       return this.getDefaultTools();
     }
@@ -157,31 +162,22 @@ export class MCPCommandGenerator {
    * Create command handler for a tool
    */
   private createCommandHandler(tool: MCPToolDefinition) {
-    return async (args: any, context: any) => {
+    return async (args: any, _context: any) => {
       const spinner = ora(`Executing ${tool.name}...`).start();
 
       try {
-        const result = await this.mcpClient.executeTool(tool.name, args, {
-          streaming: tool.streaming,
-        });
+        // MCPClient.executeTool() returns the result directly, not a wrapper object
+        const startTime = Date.now();
+        const result = await this.mcpClient.executeTool(tool.name, args);
+        const duration = Date.now() - startTime;
 
-        if (result.success) {
-          spinner.succeed(`Completed in ${result.metadata?.duration || 0}ms`);
+        spinner.succeed(`Completed in ${duration}ms`);
 
-          return {
-            success: true,
-            data: result.data,
-            metadata: result.metadata,
-          };
-        } else {
-          spinner.fail('Execution failed');
-
-          return {
-            success: false,
-            error: result.error,
-            metadata: result.metadata,
-          };
-        }
+        return {
+          success: true,
+          data: result,
+          metadata: { duration },
+        };
       } catch (error) {
         spinner.fail('Execution error');
 
@@ -225,23 +221,25 @@ export class MCPCommandGenerator {
 
   /**
    * Start health monitoring
+   * TODO: Implement health checking in MCPClient
    */
   startHealthMonitoring(): void {
-    this.mcpClient.startHealthChecks();
+    // this.mcpClient.startHealthChecks();
   }
 
   /**
    * Stop health monitoring
+   * TODO: Implement health checking in MCPClient
    */
   stopHealthMonitoring(): void {
-    this.mcpClient.stopHealthChecks();
+    // this.mcpClient.stopHealthChecks();
   }
 
   /**
    * Close and cleanup
    */
-  close(): void {
-    this.mcpClient.close();
+  async close(): Promise<void> {
+    await this.mcpClient.disconnect();
   }
 }
 

@@ -36,7 +36,7 @@ export interface DockerParserOptions {
  */
 export async function parseDockerCompose(
   filePath: string,
-  options: DockerParserOptions = {}
+  _options: DockerParserOptions = {}
 ): Promise<DockerComposeConfig> {
   try {
     const content = await readFile(filePath, 'utf-8');
@@ -108,6 +108,9 @@ export function extractServiceMetadata(
   // Determine health endpoint
   const healthEndpoint = detectHealthEndpoint(service, primaryPort);
 
+  const openApiSpec = detectOpenApiSpec(name, primaryPort);
+  const graphqlSchema = detectGraphQLSchema(name, environment);
+
   return {
     name: name.replace(/^nexus-/, ''), // Remove nexus- prefix for cleaner names
     displayName,
@@ -116,11 +119,11 @@ export function extractServiceMetadata(
     status: ServiceStatus.UNKNOWN,
     container: service.container_name || name,
     ports,
-    healthEndpoint,
+    ...(healthEndpoint !== undefined && { healthEndpoint }),
     apiUrl,
-    wsUrl,
-    openApiSpec: detectOpenApiSpec(name, primaryPort),
-    graphqlSchema: detectGraphQLSchema(name, environment),
+    ...(wsUrl !== undefined && { wsUrl }),
+    ...(openApiSpec !== undefined && { openApiSpec }),
+    ...(graphqlSchema !== undefined && { graphqlSchema }),
     capabilities,
     dependencies,
     environment

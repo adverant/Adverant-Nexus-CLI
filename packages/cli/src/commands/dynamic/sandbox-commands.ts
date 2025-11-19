@@ -16,7 +16,7 @@ export const executeHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
   const code = args.code as string | undefined;
   const file = args.file as string | undefined;
   const language = args.language as string;
@@ -57,7 +57,7 @@ export const listLanguagesHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
 
   try {
     const response = await client.get('/languages');

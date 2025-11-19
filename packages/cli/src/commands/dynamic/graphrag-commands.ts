@@ -16,7 +16,7 @@ export const storeDocumentHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
 
   const file = args.file as string;
   const title = args.title as string | undefined;
@@ -62,7 +62,7 @@ export const queryHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
 
   const text = args.text as string;
   const limit = args.limit as number | undefined;

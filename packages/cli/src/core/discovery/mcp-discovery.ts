@@ -134,14 +134,15 @@ function extractMCPParameters(schema: MCPTool['inputSchema']): CommandParameter[
   const required = new Set(schema.required || []);
 
   for (const [name, prop] of Object.entries(schema.properties)) {
+    const format = inferFormat(name, prop);
     params.push({
       name,
       type: mapMCPType(prop.type),
       required: required.has(name),
       description: prop.description || '',
-      default: prop.default,
-      enum: prop.enum,
-      format: inferFormat(name, prop)
+      ...(prop.default !== undefined && { default: prop.default }),
+      ...(prop.enum !== undefined && { enum: prop.enum }),
+      ...(format !== undefined && { format })
     });
   }
 

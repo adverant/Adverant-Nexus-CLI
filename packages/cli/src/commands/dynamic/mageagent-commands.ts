@@ -16,7 +16,7 @@ export const orchestrateHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
   const task = args.task as string;
   const maxAgents = args['max-agents'] as number | undefined;
 
@@ -56,7 +56,7 @@ export const analyzeHandler: CommandHandler = async (args, context) => {
     };
   }
 
-  const client = new HTTPClient({ baseUrl: service.url });
+  const client = new HTTPClient({ baseUrl: service.url || service.apiUrl });
   const input = args.input as string;
   const focus = args.focus as string[] | undefined;
 

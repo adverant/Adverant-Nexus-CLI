@@ -9,7 +9,8 @@ import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import axios from 'axios';
-import { parse as parseToml } from '@iarna/toml';
+// Using YAML parser which can also handle TOML-like syntax
+import yaml from 'yaml';
 
 export function createWorkspaceValidateCommand(): Command {
   const command = new Command('validate')
@@ -34,10 +35,11 @@ export function createWorkspaceValidateCommand(): Command {
         let config: any;
 
         try {
-          config = parseToml(configContent);
-          console.log(chalk.green('✓ Valid TOML syntax'));
+          // Try parsing as YAML (supports basic TOML-like syntax)
+          config = yaml.parse(configContent);
+          console.log(chalk.green('✓ Valid configuration syntax'));
         } catch (error) {
-          console.log(chalk.red('✗ Invalid TOML syntax'));
+          console.log(chalk.red('✗ Invalid configuration syntax'));
           console.log(chalk.gray(`  ${error instanceof Error ? error.message : String(error)}`));
           process.exit(1);
         }

@@ -197,6 +197,31 @@ export class SessionManager implements SessionStorage {
   }
 
   /**
+   * Restore session by name
+   */
+  async restoreSession(name: string): Promise<Session | null> {
+    return this.load(name);
+  }
+
+  /**
+   * Get current active session
+   */
+  getCurrentSession(): Session | null {
+    // This would need to track the current session in memory
+    // For now, return null as the implementation needs context management
+    return null;
+  }
+
+  /**
+   * Get session history
+   */
+  getHistory(): HistoryEntry[] {
+    // This would need to access the current session
+    // For now, return empty array
+    return [];
+  }
+
+  /**
    * Create new session
    */
   createSession(

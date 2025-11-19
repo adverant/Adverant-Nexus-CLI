@@ -26,9 +26,15 @@ export function createSessionResumeCommand(): Command {
         }
 
         // Get most recent session
-        const mostRecent = sessions.sort((a, b) =>
+        const sortedSessions = sessions.sort((a, b) =>
           new Date(b.updated).getTime() - new Date(a.updated).getTime()
-        )[0];
+        );
+        const mostRecent = sortedSessions[0];
+
+        if (!mostRecent) {
+          console.error(chalk.red('No sessions found'));
+          process.exit(1);
+        }
 
         const session = await storage.load(mostRecent.name);
 
@@ -45,7 +51,7 @@ export function createSessionResumeCommand(): Command {
 
         // Restore session context
         const sessionManager = new SessionManager();
-        await sessionManager.restoreSession(session);
+        await sessionManager.restoreSession(session.name);
 
         process.exit(0);
       } catch (error) {
