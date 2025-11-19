@@ -1,5 +1,21 @@
 # Nexus CLI
 
+```
+           ⬡━━━━━━━━━⬡
+          ⬡   Auth    ⬡
+         ⬡━━━━━⬡━━━━━⬡
+        ⬡ GraphRAG  ⬡
+       ⬡━━━━━━━━━━━━━⬡
+      ⬡       🔷      ⬡
+     ⬡━━━━━ NEXUS ━━━━━⬡
+      ⬡       CLI     ⬡
+       ⬡━━━━━━━━━━━━━⬡
+        ⬡  MageAgent ⬡
+         ⬡━━━━━⬡━━━━━⬡
+          ⬡  Gateway ⬡
+           ⬡━━━━━━━━━⬡
+```
+
 > World-class command-line interface for the Adverant-Nexus platform - Surpassing Claude Code CLI and Gemini CLI
 
 [![Version](https://img.shields.io/npm/v/@nexus-cli/cli.svg)](https://www.npmjs.com/package/@nexus-cli/cli)

@@ -1,0 +1,29 @@
+{
+  "name": "@nexus-cli/types",
+  "version": "3.0.0",
+  "description": "Shared TypeScript types for Nexus CLI and SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "types",
+    "nexus",
+    "cli",
+    "sdk"
+  ],
+  "author": "Adverant AI",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
