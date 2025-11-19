@@ -56,7 +56,7 @@ jobs:
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
 
       - name: Publish to NPM
-        run: npm publish --workspaces --access public
+        run: npm publish --workspaces
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true

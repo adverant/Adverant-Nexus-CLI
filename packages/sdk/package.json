@@ -69,6 +69,7 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "access": "public"
-  }
+    "access": "restricted"
+  },
+  "private": false
 }
