@@ -193,7 +193,11 @@ export class SessionManager implements SessionStorage {
     }
 
     // Return most recently updated session
-    return this.load(sessions[0].id);
+    const session = sessions[0];
+    if (!session) {
+      return null;
+    }
+    return this.load(session.id);
   }
 
   /**

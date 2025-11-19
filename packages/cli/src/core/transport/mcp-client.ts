@@ -43,14 +43,23 @@ export class MCPClient implements MCPTransport {
     this.config = config;
 
     try {
+      if (!config.command) {
+        throw new Error('MCP server command is required');
+      }
+
+      // Filter out undefined env values
+      const cleanEnv: Record<string, string> = {};
+      for (const [key, value] of Object.entries({ ...process.env, ...config.env })) {
+        if (value !== undefined) {
+          cleanEnv[key] = value;
+        }
+      }
+
       // Create stdio transport
       this.transport = new StdioClientTransport({
         command: config.command,
         args: config.args || [],
-        env: {
-          ...process.env,
-          ...config.env,
-        },
+        env: cleanEnv,
       });
 
       // Create MCP client
@@ -295,7 +304,7 @@ export class MCPClient implements MCPTransport {
   /**
    * Subscribe to resource updates (if supported)
    */
-  async subscribeToResource(uri: string, callback: (update: any) => void): Promise<() => void> {
+  async subscribeToResource(uri: string, _callback: (update: any) => void): Promise<() => void> {
     this.ensureConnected();
 
     try {
@@ -307,15 +316,8 @@ export class MCPClient implements MCPTransport {
       // Subscribe via MCP protocol
       await this.call('resources/subscribe', { uri });
 
-      // Setup notification handler
-      const handler = (notification: any) => {
-        if (notification.method === 'notifications/resources/updated' &&
-            notification.params?.uri === uri) {
-          callback(notification.params);
-        }
-      };
-
       // Note: Actual notification handling would require SDK support
+      // The callback would be invoked when notifications arrive
       // This is a placeholder for the interface
 
       // Return unsubscribe function
@@ -448,7 +450,7 @@ export class MCPClient implements MCPTransport {
   /**
    * Set progress callback for streaming operations
    */
-  setProgressCallback(callback: (progress: any) => void): void {
+  setProgressCallback(_callback: (progress: any) => void): void {
     // MCP SDK would need to support progress notifications
     // This is a placeholder for future implementation
   }

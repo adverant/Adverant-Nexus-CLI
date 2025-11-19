@@ -57,6 +57,10 @@ export interface MCPConfig {
   autoStore?: boolean;
   memoryTags?: string[];
   healthCheckInterval?: number;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  timeout?: number;
 }
 
 export interface Shortcut {

@@ -554,7 +554,7 @@ export function getAuthRequirements(spec: OpenAPISpec): {
   }
 
   // Get first security scheme
-  const [schemeName, scheme] = Object.entries(securitySchemes)[0] || [];
+  const [_schemeName, scheme] = Object.entries(securitySchemes)[0] || [];
 
   if (!scheme) {
     return { type: 'none' };

@@ -26,14 +26,12 @@ export class ContextManager {
     this.context = {
       cwd: process.cwd(),
       config,
-      workspace,
+      ...(workspace && { workspace }),
       services,
       verbose: config.defaults?.verbose || false,
       quiet: config.defaults?.quiet || false,
       outputFormat: config.defaults?.outputFormat || 'text',
       transport: null,
-      namespace: undefined,
-      lastResult: undefined,
       sessionStart: new Date(),
       commandCount: 0,
     };
@@ -67,7 +65,11 @@ export class ContextManager {
    * Set current namespace
    */
   setNamespace(namespace: string | undefined): void {
-    this.context.namespace = namespace;
+    if (namespace !== undefined) {
+      this.context.namespace = namespace;
+    } else {
+      delete this.context.namespace;
+    }
   }
 
   /**
@@ -103,7 +105,7 @@ export class ContextManager {
    */
   toSessionContext(): SessionContext {
     return {
-      workspace: this.context.workspace,
+      ...(this.context.workspace && { workspace: this.context.workspace }),
       cwd: this.context.cwd,
       config: this.context.config,
       environment: process.env as Record<string, string>,
@@ -128,8 +130,8 @@ export class ContextManager {
    * Reset context to initial state
    */
   reset(): void {
-    this.context.namespace = undefined;
-    this.context.lastResult = undefined;
+    delete this.context.namespace;
+    delete this.context.lastResult;
     this.context.commandCount = 0;
     this.context.sessionStart = new Date();
   }

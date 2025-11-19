@@ -407,7 +407,7 @@ export class WebSocketClient implements WebSocketTransport {
       connected: this.connected,
       reconnectAttempts: this.reconnectAttempts,
       bufferedMessages: this.messageBuffer.length,
-      readyState: this.ws?.readyState,
+      ...(this.ws?.readyState !== undefined && { readyState: this.ws.readyState }),
       url: this.url,
     };
   }

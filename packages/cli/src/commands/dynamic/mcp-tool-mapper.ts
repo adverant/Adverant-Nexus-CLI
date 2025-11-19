@@ -171,7 +171,7 @@ export class MCPToolMapper {
    */
   private generateUsage(
     cliName: string,
-    args: ArgumentDefinition[],
+    _args: ArgumentDefinition[],
     options: OptionDefinition[]
   ): string {
     let usage = `nexus mcp ${cliName}`;

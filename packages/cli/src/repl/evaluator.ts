@@ -291,7 +291,7 @@ export class CommandEvaluator {
   /**
    * Build command args from parsed input
    */
-  private buildCommandArgs(parsed: ParsedCommand, command: Command): any {
+  private buildCommandArgs(parsed: ParsedCommand, _command: Command): any {
     const args: any = {
       _: parsed.args.filter(arg => !arg.startsWith('-')),
       ...parsed.options,

@@ -195,7 +195,11 @@ export class SessionStorage implements ISessionStorage {
     }
 
     // First session is most recent (already sorted)
-    return this.load(sessions[0].name);
+    const session = sessions[0];
+    if (!session) {
+      return null;
+    }
+    return this.load(session.name);
   }
 
   /**

@@ -288,10 +288,10 @@ export class HTTPClient implements HTTPTransport {
     const config: AxiosRequestConfig = {
       method,
       url: path,
-      headers: options?.headers,
-      params: options?.params,
-      timeout: options?.timeout,
-      signal: options?.signal,
+      ...(options?.headers && { headers: options.headers }),
+      ...(options?.params && { params: options.params }),
+      ...(options?.timeout !== undefined && { timeout: options.timeout }),
+      ...(options?.signal && { signal: options.signal }),
     };
 
     if (data) {
@@ -310,8 +310,8 @@ export class HTTPClient implements HTTPTransport {
         name: 'TransportError',
         message: error.message,
         code: error.code || 'UNKNOWN',
-        statusCode: error.response?.status,
-        details: error.response?.data,
+        ...(error.response?.status !== undefined && { statusCode: error.response.status }),
+        ...(error.response?.data && { details: error.response.data }),
         retryable: this.shouldRetry(error, 0),
       };
 

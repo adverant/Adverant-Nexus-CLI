@@ -33,23 +33,6 @@ export class MCPCommandGenerator {
   }
 
   /**
-   * Setup event listeners for client events
-   * TODO: Implement event emitter in MCPClient
-   */
-  private _setupEventListeners(): void {
-    // MCPClient doesn't implement EventEmitter yet
-    // this.mcpClient.on('health:degraded', () => {
-    //   console.warn(chalk.yellow('⚠️  MCP system unavailable - operations will be queued'));
-    // });
-    // this.mcpClient.on('health:recovered', () => {
-    //   console.log(chalk.green('MCP system recovered - processing queued operations'));
-    // });
-    // this.mcpClient.on('operation:queued', (op: any) => {
-    //   console.log(chalk.yellow(`Operation queued: ${op.operation}`));
-    // });
-  }
-
-  /**
    * Discover and generate commands from MCP tools
    */
   async discover(): Promise<Command[]> {

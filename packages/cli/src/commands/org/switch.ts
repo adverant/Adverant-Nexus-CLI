@@ -92,15 +92,14 @@ export function createSwitchOrganizationCommand(
               },
             ]);
 
-            selectedOrg = organizations[orgIndex];
-
-            // Type guard
-            if (!selectedOrg) {
+            const org = organizations[orgIndex];
+            if (!org) {
               throw new Error('Invalid organization selected');
             }
+            selectedOrg = org;
 
             // Check if already current
-            if (selectedOrg.id === currentOrgId) {
+            if (org.id === currentOrgId) {
               console.log(
                 chalk.yellow(`\n${selectedOrg.name} is already your default organization.\n`)
               );

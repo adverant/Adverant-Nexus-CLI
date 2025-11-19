@@ -149,8 +149,6 @@ export class ConfigManager {
   private readonly globalConfigFile: string;
   private readonly workspaceConfigFile: string = '.nexus.toml';
 
-  private _globalConfig: GlobalConfig | null = null;
-  private _workspaceConfig: NexusConfig | null = null;
   private mergedConfig: NexusConfig | null = null;
 
   constructor(configDir?: string) {
@@ -208,7 +206,6 @@ export class ConfigManager {
       const parsed = yaml.parse(content);
       const validated = GlobalConfigSchema.parse(parsed) as GlobalConfig;
 
-      this._globalConfig = validated;
       return validated;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -231,7 +228,6 @@ export class ConfigManager {
       const validated = GlobalConfigSchema.parse(config) as GlobalConfig;
       const content = yaml.stringify(validated);
       await fs.writeFile(this.globalConfigFile, content, 'utf-8');
-      this._globalConfig = validated;
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new ConfigurationError(
@@ -261,7 +257,6 @@ export class ConfigManager {
       const parsed = yaml.parse(content);
       const validated = NexusConfigSchema.parse(parsed) as NexusConfig;
 
-      this._workspaceConfig = validated;
       return validated;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -454,7 +449,6 @@ export class ConfigManager {
    */
   clearCache(): void {
     this.mergedConfig = null;
-    this._workspaceConfig = null;
   }
 
   /**

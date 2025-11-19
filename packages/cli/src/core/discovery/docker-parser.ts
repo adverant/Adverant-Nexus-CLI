@@ -140,11 +140,11 @@ function parsePortMappings(ports: string[]): PortMapping[] {
   return ports.map(portStr => {
     // Format: "host:container" or "host:container/protocol"
     const [mapping, protocol = 'tcp'] = portStr.split('/');
-    const [hostStr, containerStr] = mapping.split(':');
+    const [hostStr, containerStr] = (mapping || '').split(':');
 
     return {
-      host: parseInt(hostStr, 10),
-      container: containerStr ? parseInt(containerStr, 10) : parseInt(hostStr, 10),
+      host: parseInt(hostStr || '0', 10),
+      container: containerStr ? parseInt(containerStr, 10) : parseInt(hostStr || '0', 10),
       protocol: protocol as 'tcp' | 'udp'
     };
   });
@@ -336,7 +336,7 @@ function generateDisplayName(name: string): string {
  * @param service - Service configuration
  * @returns Human-readable description
  */
-function generateDescription(name: string, service: DockerComposeService): string {
+function generateDescription(name: string, _service: DockerComposeService): string {
   const cleanName = name.replace(/^nexus-/, '');
 
   const descriptions: Record<string, string> = {

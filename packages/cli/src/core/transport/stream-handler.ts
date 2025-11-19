@@ -31,8 +31,8 @@ export class StreamHandler implements StreamingTransport {
   private wsClient?: WebSocketClient;
 
   constructor(httpClient?: HTTPClient, wsClient?: WebSocketClient) {
-    this.httpClient = httpClient;
-    this.wsClient = wsClient;
+    if (httpClient) this.httpClient = httpClient;
+    if (wsClient) this.wsClient = wsClient;
   }
 
   /**
@@ -69,7 +69,7 @@ export class StreamHandler implements StreamingTransport {
         'Connection': 'keep-alive',
         ...options?.headers,
       },
-      signal: options?.signal,
+      ...(options?.signal && { signal: options.signal }),
     };
 
     // Add body for POST requests
@@ -93,10 +93,10 @@ export class StreamHandler implements StreamingTransport {
           url: path,
           method,
           headers: requestInit.headers as Record<string, string>,
-          params: options?.params,
-          data: options?.data,
+          ...(options?.params && { params: options.params }),
+          ...(options?.data && { data: options.data }),
           responseType: 'stream',
-          signal: options?.signal,
+          ...(options?.signal && { signal: options.signal }),
         });
 
         // Convert axios stream to fetch-like response
@@ -271,7 +271,7 @@ export class StreamHandler implements StreamingTransport {
    * Stream via WebSocket
    */
   private async *streamWebSocket<T>(
-    path: string,
+    _path: string,
     options?: StreamOptions
   ): AsyncIterable<StreamChunk<T>> {
     if (!this.wsClient) {

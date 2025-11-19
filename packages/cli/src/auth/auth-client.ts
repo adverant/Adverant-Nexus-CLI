@@ -29,7 +29,7 @@ export interface AuthClientConfig {
 export class AuthClient {
   private client: AxiosInstance;
 
-  constructor(private readonly config: AuthClientConfig) {
+  constructor(config: AuthClientConfig) {
     this.client = axios.create({
       baseURL: config.baseURL,
       timeout: config.timeout || 30000,

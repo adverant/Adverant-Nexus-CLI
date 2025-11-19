@@ -228,7 +228,7 @@ export class CommandRegistry implements ICommandRegistry {
   resolve(fullName: string): Command | undefined {
     if (fullName.includes(':')) {
       const [namespace, name] = fullName.split(':', 2);
-      return this.get(name, namespace);
+      return this.get(name || '', namespace || '');
     }
 
     // Try to find command without namespace

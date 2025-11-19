@@ -129,7 +129,7 @@ export class WorkspaceDetector {
       try {
         const content = await fs.readFile(pyprojectPath, 'utf-8');
         const match = content.match(/name\s*=\s*"([^"]+)"/);
-        if (match) {
+        if (match && match[1]) {
           return match[1];
         }
       } catch (error) {
@@ -143,7 +143,7 @@ export class WorkspaceDetector {
       try {
         const content = await fs.readFile(cargoPath, 'utf-8');
         const match = content.match(/name\s*=\s*"([^"]+)"/);
-        if (match) {
+        if (match && match[1]) {
           return match[1];
         }
       } catch (error) {

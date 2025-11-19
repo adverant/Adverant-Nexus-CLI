@@ -23,20 +23,6 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * Format permissions list (unused but kept for future use)
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _formatPermissions(permissions: string[]): string {
-  if (!permissions || permissions.length === 0) {
-    return chalk.dim('None');
-  }
-
-  return permissions
-    .map((p) => chalk.green(p))
-    .join(', ');
-}
-
-/**
  * Get subscription tier display with color
  */
 function formatSubscriptionTier(tier: string): string {

@@ -9,7 +9,7 @@
  */
 
 import * as fs from 'fs-extra';
-import type { Profile, NexusConfig, GlobalConfig } from '@nexus-cli/types';
+import type { Profile, NexusConfig } from '@nexus-cli/types';
 import { ConfigManager, ConfigurationError } from './config-manager.js';
 
 export class ProfileManager {
@@ -216,8 +216,13 @@ export class ProfileManager {
       throw new ConfigurationError(`Profile '${oldName}' not found`, { profileName: oldName });
     }
 
+    const profile = globalConfig.profiles[profileIndex];
+    if (!profile) {
+      throw new ConfigurationError(`Profile '${oldName}' not found`, { profileName: oldName });
+    }
+
     // Rename profile
-    globalConfig.profiles[profileIndex].name = newName;
+    profile.name = newName;
 
     // Update current profile if needed
     if (globalConfig.currentProfile === oldName) {

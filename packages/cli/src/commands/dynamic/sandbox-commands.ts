@@ -48,7 +48,7 @@ export const executeHandler: CommandHandler = async (args, context) => {
   }
 };
 
-export const listLanguagesHandler: CommandHandler = async (args, context) => {
+export const listLanguagesHandler: CommandHandler = async (_args, context) => {
   const service = context.services.get('sandbox');
   if (!service) {
     return {
