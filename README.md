@@ -475,7 +475,7 @@ The CLI is built with a modular, auto-discovering architecture:
 - **Plugin System**: Third-party extensions with full SDK
 - **Output Formatters**: Multiple output formats for different use cases
 
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for complete details.
+See [ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) for complete details.
 
 ## Development
 

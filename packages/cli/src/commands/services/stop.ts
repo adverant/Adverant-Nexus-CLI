@@ -62,7 +62,7 @@ async function stopSingleService(serviceName: string, timeout: number = 10): Pro
         console.error(chalk.red('\nDocker daemon is not running.'));
         console.error(chalk.dim('Please start Docker and try again\n'));
       } else if (error.type === DockerErrorType.TIMEOUT) {
-        console.error(chalk.red(`\nContainer did not stop within ${timeout} seconds.'));
+        console.error(chalk.red(`\nContainer did not stop within ${timeout} seconds.`));
         console.error(chalk.dim('Try increasing the timeout with --timeout flag\n'));
       } else {
         console.error(chalk.red(`\n${error.message}\n`));

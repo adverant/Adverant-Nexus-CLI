@@ -7,11 +7,9 @@
 export * from './service.js';
 export * from './command.js';
 export type { MCPConfig } from './config.js';
-export * from './config.js';
-export * from './config-schemas.js';
+export * from './config-schemas.js';  // Includes all config types via z.infer
 export * from './plugin.js';
-export * from './session.js';
-export * from './session-schemas.js';
+export * from './session-schemas.js';  // Includes all session types via z.infer
 export * from './output.js';
 export * from './transport.js';
 export * from './agent.js';
