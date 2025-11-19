@@ -96,6 +96,7 @@
     "strip-ansi": "^7.1.0",
     "terminal-link": "^3.0.0",
     "update-notifier": "^7.0.0",
+    "uuid": "^10.0.0",
     "wrap-ansi": "^9.0.0",
     "ws": "^8.16.0",
     "yaml": "^2.3.4",

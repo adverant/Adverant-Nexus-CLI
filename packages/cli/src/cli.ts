@@ -22,6 +22,11 @@ import { CommandRouter } from './core/router/command-router.js';
 import { createLoginCommand, createRegisterCommand, createLogoutCommand, createWhoAmICommand } from './commands/auth/index.js';
 import { createListOrganizationsCommand, createCreateOrganizationCommand, createSwitchOrganizationCommand, createOrganizationInfoCommand } from './commands/org/index.js';
 import { createCreateAPIKeyCommand, createListAPIKeysCommand, createDeleteAPIKeyCommand, createAPIKeyInfoCommand, createRotateAPIKeyCommand } from './commands/api-key/index.js';
+import { createServicesCommand } from './commands/services/index.js';
+import { createPluginCommand } from './commands/plugin/index.js';
+import { createAgentCommand } from './commands/agent/index.js';
+import { createSessionCommand } from './commands/session/index.js';
+import { createWorkspaceCommand } from './commands/workspace/index.js';
 
 // Load environment variables
 dotenv.config({ path: path.join(os.homedir(), '.nexus', '.env') });
@@ -113,15 +118,24 @@ function registerCommands(
   apiKeyCommand.addCommand(createAPIKeyInfoCommand(authClient, credentialsManager));
   apiKeyCommand.addCommand(createRotateAPIKeyCommand(authClient, credentialsManager));
 
+  // Services commands
+  program.addCommand(createServicesCommand());
+
+  // Plugin commands
+  program.addCommand(createPluginCommand());
+
+  // Agent commands
+  program.addCommand(createAgentCommand());
+
+  // Session commands
+  program.addCommand(createSessionCommand());
+
+  // Workspace commands
+  program.addCommand(createWorkspaceCommand());
+
   // TODO: Add more command groups
-  // - services (list, status, health, start, stop, restart, logs, ports)
-  // - plugins (init, install, uninstall, enable, disable, list, info)
-  // - agents (list, run, status)
-  // - sessions (list, save, load, resume, delete, export, import)
-  // - workspace (init, info, validate, git-status, git-commit)
   // - mcp (dynamic MCP tool commands)
   // - config (get, set, list, profile)
-  // - repl (start interactive shell)
 }
 
 /**

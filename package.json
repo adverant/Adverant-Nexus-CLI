@@ -49,5 +49,8 @@
   "bugs": {
     "url": "https://github.com/adverant/nexus-cli/issues"
   },
-  "homepage": "https://github.com/adverant/nexus-cli#readme"
+  "homepage": "https://github.com/adverant/nexus-cli#readme",
+  "dependencies": {
+    "uuid": "^13.0.0"
+  }
 }

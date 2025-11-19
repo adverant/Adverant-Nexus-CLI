@@ -8,10 +8,10 @@
  * - Command line arguments
  */
 
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as os from 'os';
-import * as yaml from 'yaml';
+import fs from 'fs-extra';
+import path from 'path';
+import os from 'os';
+import yaml from 'yaml';
 import { z } from 'zod';
 import type {
   NexusConfig,
