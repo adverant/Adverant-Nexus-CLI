@@ -77,6 +77,11 @@ export function createRotateAPIKeyCommand(
             oldKey = prefixMatches[0];
           }
 
+          // TypeScript guard - oldKey is guaranteed to be defined here
+          if (!oldKey) {
+            throw new Error('Internal error: oldKey not found');
+          }
+
           // Get detailed info
           const oldKeyDetails = await authClient.getAPIKey(oldKey.id);
 
@@ -124,9 +129,9 @@ export function createRotateAPIKeyCommand(
             environment: oldKeyDetails.environment,
             permissions: oldKeyDetails.permissions,
             organization_id: currentOrgId,
-            rate_limit_rpm: oldKeyDetails.rate_limit_rpm,
-            allowed_ips: oldKeyDetails.allowed_ips,
-            allowed_services: oldKeyDetails.allowed_services,
+            ...(oldKeyDetails.rate_limit_rpm !== undefined && { rate_limit_rpm: oldKeyDetails.rate_limit_rpm }),
+            ...(oldKeyDetails.allowed_ips !== undefined && { allowed_ips: oldKeyDetails.allowed_ips }),
+            ...(oldKeyDetails.allowed_services !== undefined && { allowed_services: oldKeyDetails.allowed_services }),
           };
 
           // Set expiry for new key if old key had one
@@ -163,10 +168,10 @@ export function createRotateAPIKeyCommand(
               environment: newKey.environment as any,
               permissions: newKey.permissions,
               organization_id: currentOrgId,
-              rate_limit_rpm: newKeyRequest.rate_limit_rpm,
-              allowed_ips: newKeyRequest.allowed_ips,
-              allowed_services: newKeyRequest.allowed_services,
-              expires_at: newKeyRequest.expires_at,
+              ...(newKeyRequest.rate_limit_rpm !== undefined && { rate_limit_rpm: newKeyRequest.rate_limit_rpm }),
+              ...(newKeyRequest.allowed_ips !== undefined && { allowed_ips: newKeyRequest.allowed_ips }),
+              ...(newKeyRequest.allowed_services !== undefined && { allowed_services: newKeyRequest.allowed_services }),
+              ...(newKeyRequest.expires_at !== undefined && { expires_at: newKeyRequest.expires_at }),
               revoked: false,
               created_at: newKey.created_at,
             });

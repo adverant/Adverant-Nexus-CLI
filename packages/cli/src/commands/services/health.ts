@@ -109,7 +109,7 @@ async function checkServiceHealth(serviceName: string): Promise<HealthCheck> {
     const responseTime = Date.now() - startTime;
 
     if (response.ok) {
-      const data = await response.json();
+      const data = await response.json() as { message?: string };
       return {
         service: serviceName,
         healthy: true,

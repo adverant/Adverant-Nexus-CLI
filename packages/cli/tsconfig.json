@@ -8,6 +8,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": "./src",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "paths": {
       "@nexus-cli/types": ["../../types/src"],
       "@nexus-cli/sdk": ["../../sdk/src"]

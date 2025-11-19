@@ -58,7 +58,7 @@ async function fetchAgentTasks(agentUrl: string): Promise<AgentStatus[]> {
       throw new Error(`Failed to fetch tasks: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { tasks?: AgentStatus[] };
     return data.tasks || [];
   } catch (error: any) {
     throw new Error(`Failed to connect to agent service: ${error.message}`);

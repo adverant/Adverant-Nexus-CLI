@@ -28,9 +28,8 @@ export interface AuthClientConfig {
 
 export class AuthClient {
   private client: AxiosInstance;
-  private accessToken?: string;
 
-  constructor(private config: AuthClientConfig) {
+  constructor(private readonly config: AuthClientConfig) {
     this.client = axios.create({
       baseURL: config.baseURL,
       timeout: config.timeout || 30000,
@@ -60,7 +59,6 @@ export class AuthClient {
    * Set access token for authenticated requests
    */
   setAccessToken(token: string): void {
-    this.accessToken = token;
     this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
@@ -68,7 +66,6 @@ export class AuthClient {
    * Clear access token
    */
   clearAccessToken(): void {
-    this.accessToken = undefined;
     delete this.client.defaults.headers.common['Authorization'];
   }
 

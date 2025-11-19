@@ -58,12 +58,12 @@ export class WorkspaceDetector {
       type: projectType,
       name: projectName,
       gitRepo: gitInfo.isRepo,
-      gitBranch: gitInfo.branch,
-      gitRemote: gitInfo.remote,
-      gitStatus: gitInfo.status,
+      ...(gitInfo.branch && { gitBranch: gitInfo.branch }),
+      ...(gitInfo.remote && { gitRemote: gitInfo.remote }),
+      ...(gitInfo.status && { gitStatus: gitInfo.status }),
       dockerComposeFiles: dockerFiles,
       nexusConfig: hasNexusConfig ? {} : null, // Actual config loaded by ConfigManager
-      packageManager,
+      ...(packageManager && { packageManager }),
     };
   }
 
@@ -157,7 +157,7 @@ export class WorkspaceDetector {
       try {
         const content = await fs.readFile(goModPath, 'utf-8');
         const match = content.match(/module\s+([^\s]+)/);
-        if (match) {
+        if (match && match[1]) {
           return match[1].split('/').pop() || match[1];
         }
       } catch (error) {
@@ -220,9 +220,9 @@ export class WorkspaceDetector {
 
       return {
         isRepo: true,
-        branch,
-        remote,
-        status,
+        ...(branch && { branch }),
+        ...(remote && { remote }),
+        ...(status && { status }),
       };
     } catch (error) {
       return { isRepo: true };

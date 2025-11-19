@@ -4,8 +4,6 @@
  * Types for plugin system, registration, and lifecycle
  */
 
-import type { Command } from './command.js';
-
 export interface Plugin {
   name: string;
   version: string;

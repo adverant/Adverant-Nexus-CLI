@@ -9,7 +9,6 @@
  */
 
 import * as fs from 'fs-extra';
-import * as path from 'path';
 import type { Profile, NexusConfig, GlobalConfig } from '@nexus-cli/types';
 import { ConfigManager, ConfigurationError } from './config-manager.js';
 
@@ -88,16 +87,24 @@ export class ProfileManager {
       throw new ConfigurationError(`Profile '${name}' not found`, { profileName: name });
     }
 
-    const wasDefault = globalConfig.profiles[profileIndex].default;
+    const deletedProfile = globalConfig.profiles[profileIndex];
+    if (!deletedProfile) {
+      throw new ConfigurationError(`Profile '${name}' not found`, { profileName: name });
+    }
+
+    const wasDefault = deletedProfile.default;
     const wasCurrent = globalConfig.currentProfile === name;
 
     // Remove profile
     globalConfig.profiles.splice(profileIndex, 1);
 
     // If we deleted the default or current profile, set a new one
-    if (wasDefault || wasCurrent) {
-      globalConfig.profiles[0].default = true;
-      globalConfig.currentProfile = globalConfig.profiles[0].name;
+    if ((wasDefault || wasCurrent) && globalConfig.profiles.length > 0) {
+      const firstProfile = globalConfig.profiles[0];
+      if (firstProfile) {
+        firstProfile.default = true;
+        globalConfig.currentProfile = firstProfile.name;
+      }
     }
 
     await this.configManager.saveGlobalConfig(globalConfig);
@@ -145,8 +152,11 @@ export class ProfileManager {
     });
 
     // Set new default
-    globalConfig.profiles[profileIndex].default = true;
-    globalConfig.currentProfile = name;
+    const selectedProfile = globalConfig.profiles[profileIndex];
+    if (selectedProfile) {
+      selectedProfile.default = true;
+      globalConfig.currentProfile = name;
+    }
 
     await this.configManager.saveGlobalConfig(globalConfig);
 
@@ -165,8 +175,12 @@ export class ProfileManager {
     }
 
     // Merge configurations
-    const currentConfig = globalConfig.profiles[profileIndex].config;
-    globalConfig.profiles[profileIndex].config = {
+    const profile = globalConfig.profiles[profileIndex];
+    if (!profile) {
+      throw new ConfigurationError(`Profile '${name}' not found`, { profileName: name });
+    }
+    const currentConfig = profile.config;
+    profile.config = {
       ...currentConfig,
       workspace: { ...currentConfig.workspace, ...config.workspace },
       services: { ...currentConfig.services, ...config.services },

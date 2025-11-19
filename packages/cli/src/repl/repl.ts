@@ -463,3 +463,8 @@ export class REPL {
     this.rl?.close();
   }
 }
+
+/**
+ * Export REPL as NexusREPL for backward compatibility
+ */
+export { REPL as NexusREPL };

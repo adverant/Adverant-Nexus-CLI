@@ -259,8 +259,11 @@ export function createRegisterCommand(
 
               // Set the organization if one was created
               if (orgs.length === 1) {
-                await credentialsManager.setCurrentOrganization(orgs[0].id);
-                console.log(chalk.green(`\n✓ Set ${orgs[0].name} as default organization`));
+                const firstOrg = orgs[0];
+                if (firstOrg) {
+                  await credentialsManager.setCurrentOrganization(firstOrg.id);
+                  console.log(chalk.green(`\n✓ Set ${firstOrg.name} as default organization`));
+                }
               } else if (orgs.length > 1) {
                 // If multiple orgs (edge case), ask which to use
                 const { orgIndex } = await inquirer.prompt([
@@ -275,8 +278,11 @@ export function createRegisterCommand(
                   },
                 ]);
 
-                await credentialsManager.setCurrentOrganization(orgs[orgIndex].id);
-                console.log(chalk.green(`\n✓ Set ${orgs[orgIndex].name} as default organization`));
+                const selectedOrg = orgs[orgIndex];
+                if (selectedOrg) {
+                  await credentialsManager.setCurrentOrganization(selectedOrg.id);
+                  console.log(chalk.green(`\n✓ Set ${selectedOrg.name} as default organization`));
+                }
               }
             }
           } catch (error) {

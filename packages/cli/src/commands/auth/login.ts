@@ -137,10 +137,16 @@ export function createLoginCommand(
                   },
                 ]);
 
-                await credentialsManager.setCurrentOrganization(orgs[orgIndex].id);
-                console.log(chalk.green(`\n✓ Set ${orgs[orgIndex].name} as default organization`));
+                const selectedOrg = orgs[orgIndex];
+                if (selectedOrg) {
+                  await credentialsManager.setCurrentOrganization(selectedOrg.id);
+                  console.log(chalk.green(`\n✓ Set ${selectedOrg.name} as default organization`));
+                }
               } else {
-                await credentialsManager.setCurrentOrganization(orgs[0].id);
+                const firstOrg = orgs[0];
+                if (firstOrg) {
+                  await credentialsManager.setCurrentOrganization(firstOrg.id);
+                }
               }
             }
           } catch (error) {

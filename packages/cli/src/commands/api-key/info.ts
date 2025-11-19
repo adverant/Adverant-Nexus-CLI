@@ -74,6 +74,11 @@ export function createAPIKeyInfoCommand(
             apiKey = prefixMatches[0];
           }
 
+          // TypeScript guard - apiKey is guaranteed to be defined here
+          if (!apiKey) {
+            throw new Error('Internal error: apiKey not found');
+          }
+
           // Get detailed info
           const detailedKey = await authClient.getAPIKey(apiKey.id);
 

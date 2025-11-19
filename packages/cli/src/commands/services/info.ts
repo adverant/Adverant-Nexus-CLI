@@ -66,7 +66,6 @@ async function getServiceInfo(
     const data = JSON.parse(inspect);
     const config = data.Config || {};
     const networkSettings = data.NetworkSettings || {};
-    const hostConfig = data.HostConfig || {};
 
     const ports: Array<{ host: string; container: string; protocol: string }> = [];
     const portBindings = networkSettings.Ports || {};
@@ -76,7 +75,7 @@ async function getServiceInfo(
         const [port, protocol] = containerPort.split('/');
         ports.push({
           host: (hostPorts as any)[0].HostPort,
-          container: port,
+          container: port || '',
           protocol: protocol || 'tcp',
         });
       }

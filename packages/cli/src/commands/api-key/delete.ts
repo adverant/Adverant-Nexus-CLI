@@ -77,6 +77,11 @@ export function createDeleteAPIKeyCommand(
 
           spinner.stop();
 
+          // TypeScript guard - apiKey is guaranteed to be defined here
+          if (!apiKey) {
+            throw new Error('Internal error: apiKey not found');
+          }
+
           // Check if already revoked
           if (apiKey.revoked) {
             console.log(

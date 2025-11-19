@@ -84,10 +84,10 @@ async function getGitStatus(): Promise<GitStatus> {
       remote,
       files,
       lastCommit: {
-        hash: hash.substring(0, 8),
-        message,
-        author,
-        time,
+        hash: hash ? hash.substring(0, 8) : '',
+        message: message || '',
+        author: author || '',
+        time: time || '',
       },
       hasChanges: files.length > 0,
     };

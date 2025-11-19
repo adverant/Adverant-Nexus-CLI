@@ -6,7 +6,7 @@
  */
 
 import axios from 'axios';
-import { resolve, join } from 'path';
+import { join } from 'path';
 import { homedir } from 'os';
 import type {
   ServiceMetadata,
@@ -16,8 +16,6 @@ import type {
 import { ServiceStatus } from '@nexus-cli/types';
 import type { Plugin } from '@nexus-cli/types';
 import {
-  parseDockerCompose,
-  extractServiceMetadata,
   parseMultipleComposeFiles,
   filterApplicationServices
 } from './docker-parser.js';
@@ -117,7 +115,6 @@ export async function refreshDiscovery(
     skipOpenAPI = false,
     skipMCP = false,
     skipPlugins = false,
-    cacheTimeout = DEFAULT_CACHE_TTL
   } = options;
 
   console.log('🔍 Discovering services...');
@@ -141,9 +138,9 @@ export async function refreshDiscovery(
 
   if (!skipMCP) {
     console.log('🔌 Discovering MCP tools...');
-    mcpCommands = await discoverMCPCommands({
-      mcpUrl: options.mcpUrl
-    });
+    mcpCommands = await discoverMCPCommands(
+      options.mcpUrl ? { mcpUrl: options.mcpUrl } : {}
+    );
     console.log(`✅ Found ${mcpCommands.length} MCP tools`);
   }
 
@@ -152,9 +149,9 @@ export async function refreshDiscovery(
 
   if (!skipPlugins) {
     console.log('🔌 Discovering plugins...');
-    plugins = await discoverPlugins({
-      pluginDir: options.pluginDir
-    });
+    plugins = await discoverPlugins(
+      options.pluginDir ? { pluginDir: options.pluginDir } : {}
+    );
     console.log(`✅ Found ${plugins.length} plugins`);
 
     // Add plugin commands to command map
@@ -583,4 +580,64 @@ export async function checkDependencies(
     missing,
     available
   };
+}
+
+/**
+ * ServiceDiscovery class wrapper for easier instantiation
+ */
+export class ServiceDiscovery {
+  private options: ServiceDiscoveryOptions;
+
+  constructor(options: ServiceDiscoveryOptions = {}) {
+    this.options = options;
+  }
+
+  /**
+   * Discover all services
+   */
+  async discover(): Promise<DiscoveryResult> {
+    return refreshDiscovery(this.options);
+  }
+
+  /**
+   * Refresh discovery cache
+   */
+  async refresh(): Promise<DiscoveryResult> {
+    return refreshDiscovery(this.options);
+  }
+
+  /**
+   * Get cached discovery
+   */
+  async getDiscovery(): Promise<DiscoveryResult> {
+    return getDiscovery(this.options);
+  }
+
+  /**
+   * Get service by name
+   */
+  async getService(name: string): Promise<ServiceMetadata | null> {
+    return getService(name, this.options);
+  }
+
+  /**
+   * Get service commands
+   */
+  async getServiceCommands(serviceName: string): Promise<ServiceCommand[]> {
+    return getServiceCommands(serviceName, this.options);
+  }
+
+  /**
+   * Search commands
+   */
+  async searchCommands(query: string): Promise<Array<{ service: string; command: ServiceCommand }>> {
+    return searchCommands(query, this.options);
+  }
+
+  /**
+   * Clear cache
+   */
+  clearCache(): void {
+    clearCache();
+  }
 }

@@ -85,12 +85,12 @@ async function discoverServices(): Promise<ServiceInfo[]> {
     const lines = output.trim().split('\n');
     return lines.map((line) => {
       const [container, status, ports] = line.split('\t');
-      const name = container.replace('nexus-', '').replace(/-\d+$/, '');
+      const name = (container || '').replace('nexus-', '').replace(/-\d+$/, '');
 
       return {
         name,
-        container,
-        status,
+        container: container || '',
+        status: status || '',
         ports: ports || '-',
       };
     });

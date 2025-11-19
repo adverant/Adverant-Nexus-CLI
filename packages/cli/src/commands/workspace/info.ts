@@ -7,12 +7,9 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import * as fs from 'fs-extra';
 import * as path from 'path';
-import { execaCommand } from 'execa';
-import { glob } from 'glob';
 import { WorkspaceDetector } from '../../core/config/workspace-detector.js';
-import type { WorkspaceInfo } from '@nexus-cli/types';
+import type { WorkspaceInfo } from '../../core/config/workspace-detector.js';
 
 export function createWorkspaceInfoCommand(): Command {
   const command = new Command('info')

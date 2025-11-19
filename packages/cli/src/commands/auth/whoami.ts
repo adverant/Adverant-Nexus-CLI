@@ -23,9 +23,10 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * Format permissions list
+ * Format permissions list (unused but kept for future use)
  */
-function formatPermissions(permissions: string[]): string {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _formatPermissions(permissions: string[]): string {
   if (!permissions || permissions.length === 0) {
     return chalk.dim('None');
   }

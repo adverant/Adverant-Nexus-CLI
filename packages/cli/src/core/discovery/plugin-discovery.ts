@@ -6,7 +6,7 @@
  */
 
 import { readdir, readFile, stat } from 'fs/promises';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { homedir } from 'os';
 import type { Plugin, PluginManifest, PluginCommand } from '@nexus-cli/types';
 
@@ -107,7 +107,6 @@ export async function loadPlugin(
     manifestPath,
     loaded: false,
     disabled: false,
-    error: undefined
   };
 }
 

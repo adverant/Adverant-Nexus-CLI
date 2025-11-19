@@ -67,12 +67,13 @@ async function getContainerStatus(containerName: string): Promise<ContainerStatu
     const data = JSON.parse(inspect);
     const state = data.State || {};
 
+    const uptime = state.Running ? calculateUptime(state.StartedAt) : undefined;
     return {
       running: state.Running || false,
       status: state.Status || 'unknown',
       health: state.Health?.Status || 'none',
       startedAt: state.StartedAt,
-      uptime: state.Running ? calculateUptime(state.StartedAt) : undefined,
+      ...(uptime && { uptime }),
       pid: state.Pid,
       exitCode: state.ExitCode,
     };

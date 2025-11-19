@@ -54,7 +54,7 @@ async function fetchAgentStatus(agentUrl: string, taskId: string): Promise<Agent
       throw new Error(`Failed to fetch status: ${response.statusText}`);
     }
 
-    return await response.json();
+    return await response.json() as AgentStatus;
   } catch (error: any) {
     throw new Error(`Failed to connect to agent service: ${error.message}`);
   }

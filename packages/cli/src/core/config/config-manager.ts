@@ -15,14 +15,6 @@ import * as yaml from 'yaml';
 import { z } from 'zod';
 import type {
   NexusConfig,
-  WorkspaceConfig,
-  ServicesConfig,
-  AuthConfig,
-  DefaultsConfig,
-  AgentConfig,
-  PluginsConfig,
-  MCPConfig,
-  Shortcut,
   GlobalConfig,
   Profile,
 } from '@nexus-cli/types';
@@ -337,9 +329,12 @@ export class ConfigManager {
       defaults: { ...base.defaults, ...override.defaults },
       agent: { ...base.agent, ...override.agent },
       plugins: {
-        enabled: override.plugins?.enabled || base.plugins?.enabled,
-        disabled: override.plugins?.disabled || base.plugins?.disabled,
-        autoUpdate: override.plugins?.autoUpdate ?? base.plugins?.autoUpdate,
+        ...(override.plugins?.enabled && { enabled: override.plugins.enabled }),
+        ...(override.plugins?.disabled && { disabled: override.plugins.disabled }),
+        ...(override.plugins?.autoUpdate !== undefined && { autoUpdate: override.plugins.autoUpdate }),
+        ...(!override.plugins?.enabled && base.plugins?.enabled && { enabled: base.plugins.enabled }),
+        ...(!override.plugins?.disabled && base.plugins?.disabled && { disabled: base.plugins.disabled }),
+        ...((override.plugins?.autoUpdate === undefined) && base.plugins?.autoUpdate !== undefined && { autoUpdate: base.plugins.autoUpdate }),
       },
       mcp: { ...base.mcp, ...override.mcp },
       shortcuts: [...(base.shortcuts || []), ...(override.shortcuts || [])],
@@ -408,13 +403,17 @@ export class ConfigManager {
 
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
+      if (!part) continue;
       if (!(part in current)) {
         current[part] = {};
       }
       current = current[part];
     }
 
-    current[parts[parts.length - 1]] = value;
+    const lastPart = parts[parts.length - 1];
+    if (lastPart) {
+      current[lastPart] = value;
+    }
 
     // Update profile in global config
     const profileIndex = globalConfig.profiles.findIndex((p) => p.name === profile.name);
@@ -456,6 +455,34 @@ export class ConfigManager {
   clearCache(): void {
     this.mergedConfig = null;
     this.workspaceConfig = null;
+  }
+
+  /**
+   * Load all configuration (global + workspace)
+   */
+  async load(): Promise<void> {
+    await this.loadGlobalConfig();
+    await this.loadWorkspaceConfig();
+    // Merged config is created on-demand in getConfig()
+  }
+
+  /**
+   * Get a configuration value by dot-notation key
+   */
+  get(key: string): unknown {
+    const config = this.mergedConfig || DEFAULT_CONFIG;
+    const parts = key.split('.');
+    let current: any = config;
+
+    for (const part of parts) {
+      if (current && typeof current === 'object' && part in current) {
+        current = current[part];
+      } else {
+        return undefined;
+      }
+    }
+
+    return current;
   }
 }
 

@@ -44,10 +44,11 @@ async function runAgentTask(options: any): Promise<{ success: boolean; data?: an
   const spinner = ora(chalk.cyan('Initializing agent...')).start();
 
   try {
+    const budgetValue = options.budget ? parseFloat(options.budget) : undefined;
     const task: Partial<AgentTask> = {
       task: options.task,
       maxIterations: parseInt(options.maxIterations, 10),
-      budget: options.budget ? parseFloat(options.budget) : undefined,
+      ...(budgetValue !== undefined && { budget: budgetValue }),
       workspace: options.workspace,
       approveCommands: options.approveCommands,
       stream: options.stream,
@@ -65,7 +66,8 @@ async function runAgentTask(options: any): Promise<{ success: boolean; data?: an
       throw new Error(`Failed to submit task: ${response.statusText}`);
     }
 
-    const { taskId } = await response.json();
+    const responseData = await response.json() as { taskId: string };
+    const { taskId } = responseData;
 
     spinner.succeed(chalk.green(`Task submitted: ${taskId}`));
 
@@ -83,7 +85,7 @@ async function runAgentTask(options: any): Promise<{ success: boolean; data?: an
 async function streamProgress(
   agentUrl: string,
   taskId: string,
-  spinner: any
+  _spinner: any
 ): Promise<{ success: boolean; data?: any }> {
   console.log(chalk.cyan('\n🤖 Agent Progress:\n'));
 
@@ -97,7 +99,7 @@ async function streamProgress(
         throw new Error(`Failed to fetch status: ${response.statusText}`);
       }
 
-      const status: AgentStatus = await response.json();
+      const status = await response.json() as AgentStatus;
 
       console.log(
         chalk.gray(`[Iteration ${status.currentIteration}/${status.maxIterations}] ${status.status}`)
@@ -158,7 +160,7 @@ async function pollForCompletion(
         throw new Error(`Failed to fetch status: ${response.statusText}`);
       }
 
-      const status: AgentStatus = await response.json();
+      const status = await response.json() as AgentStatus;
 
       spinner.text = chalk.cyan(
         `[Iteration ${status.currentIteration}/${status.maxIterations}] ${status.status}`

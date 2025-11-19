@@ -74,7 +74,7 @@ async function getServicePorts(serviceName: string): Promise<PortMapping[]> {
         ports.push({
           service: serviceName,
           host: hostPort,
-          container: port,
+          container: port || '',
           protocol: protocol || 'tcp',
           url: `http://localhost:${hostPort}`,
         });

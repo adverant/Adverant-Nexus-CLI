@@ -94,6 +94,11 @@ export function createSwitchOrganizationCommand(
 
             selectedOrg = organizations[orgIndex];
 
+            // Type guard
+            if (!selectedOrg) {
+              throw new Error('Invalid organization selected');
+            }
+
             // Check if already current
             if (selectedOrg.id === currentOrgId) {
               console.log(

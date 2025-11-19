@@ -79,8 +79,10 @@ export function createWorkspaceGitCommitCommand(): Command {
 
         const log = await execaCommand('git log -1 --format=%H|%s', { shell: true });
         const [hash, msg] = log.stdout.split('|');
-        console.log(chalk.green(`\nCommit: ${hash.substring(0, 8)}`));
-        console.log(chalk.gray(`   ${msg}`));
+        if (hash) {
+          console.log(chalk.green(`\nCommit: ${hash.substring(0, 8)}`));
+          console.log(chalk.gray(`   ${msg || ''}`));
+        }
 
         if (options.push) {
           const pushSpinner = ora('Pushing to remote...').start();

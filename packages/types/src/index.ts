@@ -6,6 +6,7 @@
 
 export * from './service.js';
 export * from './command.js';
+export type { MCPConfig } from './config.js';
 export * from './config.js';
 export * from './plugin.js';
 export * from './session.js';
