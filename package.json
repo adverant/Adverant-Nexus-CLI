@@ -1,0 +1,53 @@
+{
+  "name": "nexus-cli-monorepo",
+  "version": "3.0.0",
+  "private": true,
+  "description": "World-class CLI for Adverant-Nexus - Monorepo containing CLI, SDK, and shared types",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit --workspaces",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules",
+    "dev:cli": "npm run dev --workspace=@nexus-cli/cli",
+    "dev:sdk": "npm run dev --workspace=@nexus-cli/sdk"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "cli",
+    "nexus",
+    "ai",
+    "mcp",
+    "model-context-protocol",
+    "microservices",
+    "graphrag",
+    "agents",
+    "adverant"
+  ],
+  "author": "Adverant AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adverant/nexus-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adverant/nexus-cli/issues"
+  },
+  "homepage": "https://github.com/adverant/nexus-cli#readme"
+}
