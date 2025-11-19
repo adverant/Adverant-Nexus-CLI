@@ -47,13 +47,13 @@ export class Completer {
 
     // First word - complete command or namespace
     if (parts.length === 1) {
-      const completions = this.completeCommand(parts[0], context);
+      const completions = this.completeCommand(parts[0] || '', context);
       return [completions, line];
     }
 
     // Second word onwards - complete options or arguments
-    const command = parts[0];
-    const currentWord = parts[parts.length - 1];
+    const command = parts[0] || '';
+    const currentWord = parts[parts.length - 1] || '';
 
     // Check if completing an option
     if (currentWord.startsWith('--')) {

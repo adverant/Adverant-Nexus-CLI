@@ -161,15 +161,18 @@ export class HistoryManager implements IHistoryManager {
     success = true,
     duration = 0
   ): HistoryEntry {
-    return {
+    const entry: HistoryEntry = {
       id: randomUUID(),
       timestamp: new Date(),
       command,
       args,
-      namespace,
       success,
       duration,
     };
+    if (namespace !== undefined) {
+      entry.namespace = namespace;
+    }
+    return entry;
   }
 }
 

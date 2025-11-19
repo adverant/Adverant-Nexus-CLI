@@ -31,7 +31,7 @@ export type CommandMiddleware = (
  * Checks if user is authenticated when command requires it
  */
 export function authMiddleware(): CommandMiddleware {
-  return async (command, args, context, next) => {
+  return async (command, _args, context, next) => {
     if (command.requiresAuth && !context.config?.auth?.token) {
       return {
         success: false,
@@ -49,7 +49,7 @@ export function authMiddleware(): CommandMiddleware {
  * Checks if command is run within a workspace when required
  */
 export function workspaceMiddleware(): CommandMiddleware {
-  return async (command, args, context, next) => {
+  return async (command, _args, context, next) => {
     if (command.requiresWorkspace && !context.workspace) {
       return {
         success: false,
@@ -98,7 +98,7 @@ export function loggingMiddleware(verbose: boolean = false): CommandMiddleware {
  * Catches and formats errors consistently
  */
 export function errorHandlingMiddleware(): CommandMiddleware {
-  return async (command, args, context, next) => {
+  return async (command, _args, context, next) => {
     try {
       return await next();
     } catch (error: any) {
@@ -107,11 +107,11 @@ export function errorHandlingMiddleware(): CommandMiddleware {
         success: false,
         error: error.message || 'Unknown error occurred',
         metadata: {
-          service: command.namespace,
+          ...(command.namespace && { service: command.namespace }),
           error: {
             name: error.name,
             code: error.code,
-            stack: context.verbose ? error.stack : undefined,
+            ...(context.verbose && error.stack && { stack: error.stack }),
           },
         },
       };
@@ -132,7 +132,7 @@ export function telemetryMiddleware(
     duration: number
   ) => void
 ): CommandMiddleware {
-  return async (command, args, context, next) => {
+  return async (command, args, _context, next) => {
     const startTime = Date.now();
 
     const result = await next();
@@ -192,7 +192,7 @@ export function confirmationMiddleware(
   isDestructive: (command: Command) => boolean,
   confirm: (message: string) => Promise<boolean>
 ): CommandMiddleware {
-  return async (command, args, context, next) => {
+  return async (command, args, _context, next) => {
     // Skip confirmation if --yes flag is set
     if (args.yes || args.y) {
       return next();
@@ -231,7 +231,7 @@ export function rateLimitMiddleware(
 ): CommandMiddleware {
   const executions = new Map<string, number[]>();
 
-  return async (command, args, context, next) => {
+  return async (command, _args, _context, next) => {
     const key = command.namespace
       ? `${command.namespace}:${command.name}`
       : command.name;
@@ -246,7 +246,7 @@ export function rateLimitMiddleware(
 
     // Check if rate limit exceeded
     if (recentTimestamps.length >= maxExecutions) {
-      const oldestTimestamp = recentTimestamps[0];
+      const oldestTimestamp = recentTimestamps[0] || now;
       const resetTime = oldestTimestamp + windowMs;
       const waitSeconds = Math.ceil((resetTime - now) / 1000);
 

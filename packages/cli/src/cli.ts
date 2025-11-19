@@ -36,7 +36,9 @@ async function initializeSystems() {
   await configManager.load();
 
   // Get API URL from config or environment
-  const apiUrl = process.env.NEXUS_API_URL || configManager.get('api.url') || 'http://localhost:9092';
+  const configApiUrl = configManager.get('api.url');
+  const apiUrl = process.env.NEXUS_API_URL ||
+    (typeof configApiUrl === 'string' ? configApiUrl : 'http://localhost:9092');
 
   // Initialize auth systems
   const authClient = new AuthClient({ baseURL: apiUrl });
@@ -49,10 +51,12 @@ async function initializeSystems() {
   }
 
   // Initialize service discovery
-  const serviceDiscovery = new ServiceDiscovery({
-    dockerComposePath: process.env.DOCKER_COMPOSE_PATH || configManager.get('discovery.dockerComposePath'),
-    mcpServers: configManager.get('mcp.servers') || {},
-  });
+  const composeFiles = process.env.DOCKER_COMPOSE_PATH
+    ? [process.env.DOCKER_COMPOSE_PATH]
+    : undefined;
+  const serviceDiscovery = new ServiceDiscovery(
+    composeFiles ? { composeFiles } : {}
+  );
 
   // Initialize command systems
   const commandRegistry = new CommandRegistry();
@@ -171,12 +175,13 @@ export async function runCLI(): Promise<void> {
     .alias('shell')
     .description('Start interactive REPL shell')
     .action(async () => {
-      const { NexusREPL } = await import('./repl/repl.js');
-      const repl = new NexusREPL({
-        authClient: systems.authClient,
-        credentialsManager: systems.credentialsManager,
-        configManager: systems.configManager,
-        serviceDiscovery: systems.serviceDiscovery,
+      const { REPL } = await import('./repl/repl.js');
+      const discovery = await systems.serviceDiscovery.discover();
+      const repl = new REPL({
+        config: systems.configManager,
+        services: discovery.services,
+        commands: discovery.commands as any, // ServiceCommand compatible with Command
+        version: program.version() || '1.0.0',
       });
       await repl.start();
     });

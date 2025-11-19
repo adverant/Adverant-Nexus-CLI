@@ -39,7 +39,7 @@ export class CommandEvaluator {
       return null;
     }
 
-    const commandName = tokens[0];
+    const commandName = tokens[0] || '';
 
     // Check if built-in REPL command
     if (this.isBuiltInCommand(commandName)) {
@@ -74,7 +74,7 @@ export class CommandEvaluator {
 
     // Check if namespace.command format
     if (commandName.includes('.')) {
-      const [namespace, cmd] = commandName.split('.');
+      const [namespace = '', cmd = ''] = commandName.split('.');
       return {
         type: 'service',
         command: cmd,
@@ -122,7 +122,7 @@ export class CommandEvaluator {
           };
         }
 
-        const namespace = parsed.args[0];
+        const namespace = parsed.args[0] || '';
         if (!this.commands.has(namespace)) {
           return {
             success: false,
@@ -163,7 +163,7 @@ export class CommandEvaluator {
           metadata: {
             ...result.metadata,
             duration,
-            service: parsed.namespace,
+            ...(parsed.namespace && { service: parsed.namespace }),
           },
         };
       }
@@ -223,18 +223,22 @@ export class CommandEvaluator {
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
+      if (!token) continue;
 
       // Long option: --key=value or --key value
       if (token.startsWith('--')) {
         const key = token.slice(2);
 
         if (key.includes('=')) {
-          const [optKey, optValue] = key.split('=');
-          options[optKey] = this.parseValue(optValue);
+          const [optKey = '', optValue = ''] = key.split('=');
+          if (optKey) {
+            options[optKey] = this.parseValue(optValue);
+          }
         } else {
           // Check if next token is the value
-          if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
-            options[key] = this.parseValue(tokens[i + 1]);
+          const nextToken = tokens[i + 1];
+          if (nextToken && !nextToken.startsWith('-')) {
+            options[key] = this.parseValue(nextToken);
             i++;
           } else {
             // Boolean flag
@@ -246,8 +250,9 @@ export class CommandEvaluator {
       else if (token.startsWith('-') && token.length === 2) {
         const key = token.slice(1);
 
-        if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
-          options[key] = this.parseValue(tokens[i + 1]);
+        const nextToken = tokens[i + 1];
+        if (nextToken && !nextToken.startsWith('-')) {
+          options[key] = this.parseValue(nextToken);
           i++;
         } else {
           options[key] = true;

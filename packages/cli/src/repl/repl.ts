@@ -309,7 +309,7 @@ export class REPL {
    * Handle history command
    */
   private handleHistory(args: string[]): CommandResult {
-    const limit = args.length > 0 ? parseInt(args[0]) : 20;
+    const limit = args.length > 0 ? parseInt(args[0] || '20') : 20;
     const entries = this.historyManager.list(limit);
 
     return {
@@ -343,7 +343,7 @@ export class REPL {
       };
     }
 
-    const name = args[0];
+    const name = args[0] || '';
     const context = this.contextManager.toSessionContext();
     const session = this.sessionManager.createSession(name, context);
 
@@ -369,7 +369,7 @@ export class REPL {
       };
     }
 
-    const name = args[0];
+    const name = args[0] || '';
     const session = await this.sessionManager.load(name);
 
     if (!session) {

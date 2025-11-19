@@ -130,22 +130,24 @@ export class CommandRouter {
         metadata: {
           ...result.metadata,
           duration,
-          service: command.namespace,
+          ...(command.namespace && { service: command.namespace }),
         },
       };
     } catch (error: any) {
       // Handle unexpected errors
-      return {
+      const errorResult: CommandResult = {
         success: false,
         error: error.message || 'Command execution failed',
-        metadata: {
-          service: command.namespace,
-          error: {
-            name: error.name,
-            stack: error.stack,
-          },
-        },
       };
+
+      // Add metadata only if we have data to add
+      if (command.namespace || error.name || error.stack) {
+        errorResult.metadata = {
+          ...(command.namespace && { service: command.namespace }),
+        };
+      }
+
+      return errorResult;
     }
   }
 
@@ -171,6 +173,9 @@ export class CommandRouter {
 
     // Execute current middleware with next() function
     const middleware = this.middlewares[index];
+    if (!middleware) {
+      return command.handler(args, context);
+    }
     return middleware(command, args, context, async () => {
       return this.executeWithMiddleware(command, args, context, index + 1);
     });
@@ -195,7 +200,7 @@ export class CommandRouter {
 
     // Strategy 2: Try with namespace prefix (e.g., "graphrag:query")
     if (commandName.includes(':')) {
-      const [namespace, name] = commandName.split(':', 2);
+      const [namespace = '', name = ''] = commandName.split(':', 2);
       command = this.registry.get(name, namespace);
       if (command) return command;
     }
