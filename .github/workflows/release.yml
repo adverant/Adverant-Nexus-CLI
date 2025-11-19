@@ -91,7 +91,7 @@ jobs:
 
             **From NPM**
             ```bash
-            npm install -g @nexus-cli/cli
+            npm install -g @adverant/nexus-cli
             ```
 
             **From Source**

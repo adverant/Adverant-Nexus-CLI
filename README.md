@@ -140,10 +140,10 @@ nexus --version
 
 ```bash
 # Install globally
-npm install -g @nexus-cli/cli
+npm install -g @adverant/nexus-cli
 
 # Or use npx (no installation required)
-npx @nexus-cli/cli --version
+npx @adverant/nexus-cli --version
 ```
 
 ### 🔧 From Source (Latest Development Version)
