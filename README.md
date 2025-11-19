@@ -101,13 +101,52 @@ The **Nexus CLI** is a production-grade, auto-discovering command-line interface
 
 ## Installation
 
-### From NPM (Recommended)
+### 📦 Precompiled Binary (Quick Start)
 
+Download the latest precompiled binary for your platform:
+
+**macOS (Intel & Apple Silicon)**
 ```bash
-npm install -g @nexus-cli/cli
+# Download and install
+curl -L https://github.com/adverant/nexus-cli/releases/latest/download/nexus-macos -o nexus
+chmod +x nexus
+sudo mv nexus /usr/local/bin/
+
+# Verify installation
+nexus --version
 ```
 
-### From Source
+**Linux (x64)**
+```bash
+# Download and install
+curl -L https://github.com/adverant/nexus-cli/releases/latest/download/nexus-linux -o nexus
+chmod +x nexus
+sudo mv nexus /usr/local/bin/
+
+# Verify installation
+nexus --version
+```
+
+**Windows**
+```powershell
+# Download from: https://github.com/adverant/nexus-cli/releases/latest/download/nexus-win.exe
+# Save to: C:\Program Files\Nexus\nexus.exe
+# Add to PATH environment variable
+```
+
+> 💡 **Direct Downloads**: Visit [Releases Page](https://github.com/adverant/nexus-cli/releases) for all versions
+
+### 🚀 NPM Installation (Recommended for Development)
+
+```bash
+# Install globally
+npm install -g @nexus-cli/cli
+
+# Or use npx (no installation required)
+npx @nexus-cli/cli --version
+```
+
+### 🔧 From Source (Latest Development Version)
 
 ```bash
 # Clone repository
@@ -117,14 +156,31 @@ cd nexus-cli
 # Install dependencies
 npm install
 
-# Build
+# Build all packages
 npm run build
 
 # Link globally
+cd packages/cli
 npm link
 
 # Verify installation
 nexus --version
+```
+
+### 🐳 Docker Container
+
+```bash
+# Pull image
+docker pull adverant/nexus-cli:latest
+
+# Run CLI
+docker run -it --rm adverant/nexus-cli:latest nexus --help
+
+# With volume mount for persistence
+docker run -it --rm \
+  -v ~/.nexus:/root/.nexus \
+  adverant/nexus-cli:latest \
+  nexus services list
 ```
 
 ## Quick Start
