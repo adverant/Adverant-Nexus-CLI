@@ -15,6 +15,13 @@ import type {
   ServiceCapability
 } from '@nexus-cli/types';
 import { ServiceStatus } from '@nexus-cli/types';
+import {
+  loadServiceMetadata,
+  getDisplayName,
+  getDescription,
+  hasOpenApiSpec,
+  type MetadataConfig,
+} from './service-metadata-loader.js';
 
 /**
  * Docker parser configuration options
@@ -24,6 +31,8 @@ export interface DockerParserOptions {
   defaultProtocol?: 'http' | 'https';
   /** Default host for API URLs */
   defaultHost?: string;
+  /** Pre-loaded metadata configuration (avoids repeated file reads) */
+  metadataConfig?: MetadataConfig;
 }
 
 /**
@@ -63,15 +72,19 @@ export async function parseDockerCompose(
  * @param options - Parser configuration options
  * @returns Extracted service metadata
  */
-export function extractServiceMetadata(
+export async function extractServiceMetadata(
   name: string,
   service: DockerComposeService,
   options: DockerParserOptions = {}
-): ServiceMetadata {
+): Promise<ServiceMetadata> {
   const {
     defaultProtocol = 'http',
-    defaultHost = 'localhost'
+    defaultHost = 'localhost',
+    metadataConfig
   } = options;
+
+  // Load metadata configuration if not provided
+  const config = metadataConfig || await loadServiceMetadata();
 
   // Parse port mappings
   const ports = parsePortMappings(service.ports || []);
@@ -99,16 +112,19 @@ export function extractServiceMetadata(
   // Detect service capabilities
   const capabilities = detectCapabilities(name, service, environment);
 
-  // Generate display name (convert nexus-graphrag → GraphRAG)
-  const displayName = generateDisplayName(name);
+  // Get display name from config (replaces generateDisplayName)
+  const displayName = getDisplayName(name, config);
 
-  // Extract description from service metadata or generate
-  const description = generateDescription(name, service);
+  // Get description from config (replaces generateDescription)
+  const description = getDescription(name, config);
 
   // Determine health endpoint
   const healthEndpoint = detectHealthEndpoint(service, primaryPort);
 
-  const openApiSpec = detectOpenApiSpec(name, primaryPort);
+  // Check if service has OpenAPI from config (replaces detectOpenApiSpec)
+  const openApiSpec = hasOpenApiSpec(name, config) && primaryPort > 0
+    ? '/openapi.json'
+    : undefined;
   const graphqlSchema = detectGraphQLSchema(name, environment);
 
   return {
@@ -280,95 +296,19 @@ function detectCapabilities(
 }
 
 /**
- * Generate display name from service name
- *
- * @param name - Service name
- * @returns Human-readable display name
+ * @deprecated Use getDisplayName from service-metadata-loader.ts instead
+ * This function is kept for backwards compatibility but will be removed in a future version
  */
-function generateDisplayName(name: string): string {
-  // Remove nexus- prefix
-  const cleanName = name.replace(/^nexus-/, '');
-
-  // Handle special cases
-  const specialCases: Record<string, string> = {
-    'graphrag': 'GraphRAG',
-    'mageagent': 'MageAgent',
-    'learningagent': 'LearningAgent',
-    'orchestrationagent': 'OrchestrationAgent',
-    'videoagent': 'VideoAgent',
-    'geoagent': 'GeoAgent',
-    'fileprocess-api': 'FileProcess API',
-    'fileprocess-worker': 'FileProcess Worker',
-    'api-gateway': 'API Gateway',
-    'mcp-server': 'MCP Server',
-    'mcp-gateway': 'MCP Gateway',
-    'auth-service': 'Auth Service',
-    'plugin-manager': 'Plugin Manager',
-    'postgres': 'PostgreSQL',
-    'redis': 'Redis',
-    'neo4j': 'Neo4j',
-    'qdrant': 'Qdrant',
-    'nginx': 'Nginx',
-    'kafka': 'Kafka',
-    'zookeeper': 'Zookeeper',
-    'minio': 'MinIO',
-    'jaeger': 'Jaeger',
-    'robotics': 'NexusRobotics',
-    'sandbox': 'Sandbox',
-    'nested-learning': 'Nested Learning Coordinator'
-  };
-
-  if (specialCases[cleanName]) {
-    return specialCases[cleanName];
-  }
-
-  // Default: capitalize first letter of each word
-  return cleanName
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+function generateDisplayName(_name: string): string {
+  throw new Error('generateDisplayName is deprecated. Use getDisplayName from service-metadata-loader.ts');
 }
 
 /**
- * Generate service description
- *
- * @param name - Service name
- * @param service - Service configuration
- * @returns Human-readable description
+ * @deprecated Use getDescription from service-metadata-loader.ts instead
+ * This function is kept for backwards compatibility but will be removed in a future version
  */
-function generateDescription(name: string, _service: DockerComposeService): string {
-  const cleanName = name.replace(/^nexus-/, '');
-
-  const descriptions: Record<string, string> = {
-    'graphrag': 'Document storage, retrieval, and knowledge graph management',
-    'mageagent': 'Multi-agent orchestration and consensus engine',
-    'learningagent': 'Progressive learning and information discovery',
-    'orchestrationagent': 'Autonomous meta-agent with ReAct loop',
-    'videoagent-api': 'Video processing API gateway',
-    'videoagent-worker': 'Video processing worker',
-    'geoagent': 'Geospatial AI and mapping services',
-    'fileprocess-api': 'Document processing API gateway',
-    'fileprocess-worker': 'Document processing worker',
-    'api-gateway': 'HTTP REST + WebSocket server',
-    'mcp-server': 'Model Context Protocol interface',
-    'mcp-gateway': 'MCP stdio adapter',
-    'auth-service': 'Authentication and authorization',
-    'plugin-manager': 'Plugin registry and management',
-    'sandbox': 'Code execution and LLM inference',
-    'postgres': 'Primary database',
-    'redis': 'Cache layer and job queue',
-    'neo4j': 'Graph database',
-    'qdrant': 'Vector database',
-    'nginx': 'Reverse proxy',
-    'kafka': 'Message broker',
-    'zookeeper': 'Kafka coordinator',
-    'minio': 'Object storage',
-    'jaeger': 'Distributed tracing',
-    'robotics': 'Autonomous systems and drone control',
-    'nested-learning': 'Real-time streaming and meta-learning'
-  };
-
-  return descriptions[cleanName] || `${generateDisplayName(name)} service`;
+function generateDescription(_name: string, _service: DockerComposeService): string {
+  throw new Error('generateDescription is deprecated. Use getDescription from service-metadata-loader.ts');
 }
 
 /**
@@ -415,29 +355,11 @@ function detectHealthEndpoint(service: DockerComposeService, port: number): stri
 }
 
 /**
- * Detect OpenAPI spec endpoint
- *
- * @param name - Service name
- * @param port - Primary port number
- * @returns OpenAPI spec endpoint path or undefined
+ * @deprecated Use hasOpenApiSpec from service-metadata-loader.ts instead
+ * This function is kept for backwards compatibility but will be removed in a future version
  */
-function detectOpenApiSpec(name: string, port: number): string | undefined {
-  if (port === 0) return undefined;
-
-  // Services that typically expose OpenAPI specs
-  const openApiServices = [
-    'graphrag', 'mageagent', 'learningagent', 'orchestrationagent',
-    'videoagent', 'geoagent', 'fileprocess', 'sandbox', 'api-gateway'
-  ];
-
-  const cleanName = name.replace(/^nexus-/, '');
-  const hasOpenApi = openApiServices.some(svc => cleanName.includes(svc));
-
-  if (hasOpenApi) {
-    return '/openapi.json'; // or /api-docs or /swagger.json
-  }
-
-  return undefined;
+function detectOpenApiSpec(_name: string, _port: number): string | undefined {
+  throw new Error('detectOpenApiSpec is deprecated. Use hasOpenApiSpec from service-metadata-loader.ts');
 }
 
 /**
@@ -468,12 +390,16 @@ export async function parseMultipleComposeFiles(
 ): Promise<Map<string, ServiceMetadata>> {
   const services = new Map<string, ServiceMetadata>();
 
+  // Load metadata config once for all services
+  const metadataConfig = options.metadataConfig || await loadServiceMetadata();
+  const optionsWithConfig = { ...options, metadataConfig };
+
   for (const filePath of filePaths) {
     try {
       const config = await parseDockerCompose(filePath, options);
 
       for (const [name, service] of Object.entries(config.services)) {
-        const metadata = extractServiceMetadata(name, service, options);
+        const metadata = await extractServiceMetadata(name, service, optionsWithConfig);
         services.set(metadata.name, metadata);
       }
     } catch (error) {
@@ -489,15 +415,20 @@ export async function parseMultipleComposeFiles(
  * Filter services by type (exclude databases, infrastructure)
  *
  * @param services - Map of all services
+ * @param config - Optional metadata configuration (loads from file if not provided)
  * @returns Map of application services only
  */
-export function filterApplicationServices(
-  services: Map<string, ServiceMetadata>
-): Map<string, ServiceMetadata> {
-  const infraServices = new Set([
-    'postgres', 'postgresql', 'redis', 'neo4j', 'qdrant',
-    'kafka', 'zookeeper', 'nginx', 'minio', 'jaeger'
-  ]);
+export async function filterApplicationServices(
+  services: Map<string, ServiceMetadata>,
+  config?: MetadataConfig
+): Promise<Map<string, ServiceMetadata>> {
+  // Load config if not provided
+  const metadataConfig = config || await loadServiceMetadata();
+
+  // Get infrastructure services from config
+  const infraServices = await import('./service-metadata-loader.js').then(
+    module => module.getInfrastructureServices(metadataConfig)
+  );
 
   const filtered = new Map<string, ServiceMetadata>();
 

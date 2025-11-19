@@ -26,10 +26,12 @@ import type {
  */
 export class CommandRegistry implements ICommandRegistry {
   private commands: Map<string, Command> = new Map();
+  private aliasIndex: Map<string, string> = new Map(); // alias -> commandKey (O(1) lookup)
   private dynamicSources: Map<string, DynamicCommandSource> = new Map();
 
   /**
    * Register a single command
+   * Now builds alias index for O(1) lookup performance
    *
    * @param command - Command definition with handler, metadata, etc.
    */
@@ -38,9 +40,18 @@ export class CommandRegistry implements ICommandRegistry {
 
     if (this.commands.has(key)) {
       console.warn(`Command ${key} is already registered, overwriting`);
+      // Remove old aliases if overwriting
+      this._removeAliasesForKey(key);
     }
 
     this.commands.set(key, command);
+
+    // Build alias index for O(1) lookup
+    if (command.aliases && Array.isArray(command.aliases)) {
+      for (const alias of command.aliases) {
+        this.aliasIndex.set(alias, key);
+      }
+    }
   }
 
   /**
@@ -56,12 +67,17 @@ export class CommandRegistry implements ICommandRegistry {
 
   /**
    * Unregister a command
+   * Now also removes aliases from index
    *
    * @param name - Command name
    * @param namespace - Optional namespace
    */
   unregister(name: string, namespace?: string): void {
     const key = this.getCommandKey(name, namespace);
+
+    // Remove aliases before removing command
+    this._removeAliasesForKey(key);
+
     this.commands.delete(key);
   }
 
@@ -297,12 +313,45 @@ export class CommandRegistry implements ICommandRegistry {
   }
 
   /**
+   * Resolve alias to command (O(1) lookup)
+   * Performance optimization from O(N) to O(1)
+   *
+   * @param alias - Alias to resolve
+   * @returns Command definition or undefined
+   */
+  resolveAlias(alias: string): Command | undefined {
+    const key = this.aliasIndex.get(alias);
+    if (!key) {
+      return undefined;
+    }
+    return this.commands.get(key);
+  }
+
+  /**
+   * Remove all aliases for a given command key
+   * Internal utility for cleanup
+   *
+   * @param commandKey - Internal command key
+   */
+  private _removeAliasesForKey(commandKey: string): void {
+    const command = this.commands.get(commandKey);
+    if (!command || !command.aliases) {
+      return;
+    }
+
+    for (const alias of command.aliases) {
+      this.aliasIndex.delete(alias);
+    }
+  }
+
+  /**
    * Clear all registered commands
    *
    * WARNING: This removes all commands including static and dynamic
    */
   clear(): void {
     this.commands.clear();
+    this.aliasIndex.clear(); // Also clear alias index
   }
 
   /**

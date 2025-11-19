@@ -18,85 +18,10 @@ import type {
   GlobalConfig,
   Profile,
 } from '@nexus-cli/types';
-
-/**
- * Zod schemas for configuration validation
- */
-const WorkspaceConfigSchema = z.object({
-  name: z.string().optional(),
-  type: z.enum(['typescript', 'python', 'go', 'rust', 'java']).optional(),
-});
-
-const ServicesConfigSchema = z.object({
-  apiUrl: z.string().url().optional(),
-  mcpUrl: z.string().url().optional(),
-  timeout: z.number().positive().optional(),
-  retries: z.number().nonnegative().optional(),
-});
-
-const AuthConfigSchema = z.object({
-  apiKey: z.string().optional(),
-  strategy: z.enum(['api-key', 'oauth', 'jwt']).optional(),
-  token: z.string().optional(),
-});
-
-const DefaultsConfigSchema = z.object({
-  outputFormat: z.enum(['text', 'json', 'yaml', 'table', 'stream-json']).optional(),
-  streaming: z.boolean().optional(),
-  verbose: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-});
-
-const AgentConfigSchema = z.object({
-  maxIterations: z.number().positive().optional(),
-  autoApproveSafe: z.boolean().optional(),
-  workspace: z.string().optional(),
-  budget: z.number().positive().optional(),
-});
-
-const PluginsConfigSchema = z.object({
-  enabled: z.array(z.string()).optional(),
-  disabled: z.array(z.string()).optional(),
-  autoUpdate: z.boolean().optional(),
-});
-
-const MCPConfigSchema = z.object({
-  autoStore: z.boolean().optional(),
-  memoryTags: z.array(z.string()).optional(),
-  healthCheckInterval: z.number().positive().optional(),
-});
-
-const ShortcutSchema = z.object({
-  name: z.string(),
-  command: z.string(),
-  description: z.string().optional(),
-});
-
-const NexusConfigSchema = z.object({
-  workspace: WorkspaceConfigSchema.optional(),
-  services: ServicesConfigSchema.optional(),
-  auth: AuthConfigSchema.optional(),
-  defaults: DefaultsConfigSchema.optional(),
-  agent: AgentConfigSchema.optional(),
-  plugins: PluginsConfigSchema.optional(),
-  mcp: MCPConfigSchema.optional(),
-  shortcuts: z.array(ShortcutSchema).optional(),
-});
-
-const ProfileSchema = z.object({
-  name: z.string(),
-  config: NexusConfigSchema,
-  default: z.boolean().optional(),
-});
-
-const GlobalConfigSchema = z.object({
-  profiles: z.array(ProfileSchema),
-  currentProfile: z.string().optional(),
-  pluginDirectory: z.string().optional(),
-  cacheDirectory: z.string().optional(),
-  updateCheck: z.boolean().optional(),
-  telemetry: z.boolean().optional(),
-});
+import {
+  NexusConfigSchema,
+  GlobalConfigSchema,
+} from '@nexus-cli/types';
 
 /**
  * Default configuration values

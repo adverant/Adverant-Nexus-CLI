@@ -1,0 +1,156 @@
+{
+  "$schema": "./service-metadata.schema.json",
+  "version": "1.0.0",
+  "services": {
+    "graphrag": {
+      "displayName": "GraphRAG",
+      "description": "Document storage, retrieval, and knowledge graph management",
+      "hasOpenApi": true
+    },
+    "mageagent": {
+      "displayName": "MageAgent",
+      "description": "Multi-agent orchestration and consensus engine",
+      "hasOpenApi": true
+    },
+    "learningagent": {
+      "displayName": "LearningAgent",
+      "description": "Progressive learning and information discovery",
+      "hasOpenApi": true
+    },
+    "orchestrationagent": {
+      "displayName": "OrchestrationAgent",
+      "description": "Autonomous meta-agent with ReAct loop",
+      "hasOpenApi": true
+    },
+    "videoagent": {
+      "displayName": "VideoAgent",
+      "description": "Video processing API gateway",
+      "hasOpenApi": true
+    },
+    "videoagent-api": {
+      "displayName": "VideoAgent API",
+      "description": "Video processing API gateway",
+      "hasOpenApi": true
+    },
+    "videoagent-worker": {
+      "displayName": "VideoAgent Worker",
+      "description": "Video processing worker",
+      "hasOpenApi": false
+    },
+    "geoagent": {
+      "displayName": "GeoAgent",
+      "description": "Geospatial AI and mapping services",
+      "hasOpenApi": true
+    },
+    "fileprocess-api": {
+      "displayName": "FileProcess API",
+      "description": "Document processing API gateway",
+      "hasOpenApi": true
+    },
+    "fileprocess-worker": {
+      "displayName": "FileProcess Worker",
+      "description": "Document processing worker",
+      "hasOpenApi": false
+    },
+    "api-gateway": {
+      "displayName": "API Gateway",
+      "description": "HTTP REST + WebSocket server",
+      "hasOpenApi": true
+    },
+    "mcp-server": {
+      "displayName": "MCP Server",
+      "description": "Model Context Protocol interface",
+      "hasOpenApi": false
+    },
+    "mcp-gateway": {
+      "displayName": "MCP Gateway",
+      "description": "MCP stdio adapter",
+      "hasOpenApi": false
+    },
+    "auth-service": {
+      "displayName": "Auth Service",
+      "description": "Authentication and authorization",
+      "hasOpenApi": false
+    },
+    "plugin-manager": {
+      "displayName": "Plugin Manager",
+      "description": "Plugin registry and management",
+      "hasOpenApi": false
+    },
+    "postgres": {
+      "displayName": "PostgreSQL",
+      "description": "Primary database",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "redis": {
+      "displayName": "Redis",
+      "description": "Cache layer and job queue",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "neo4j": {
+      "displayName": "Neo4j",
+      "description": "Graph database",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "qdrant": {
+      "displayName": "Qdrant",
+      "description": "Vector database",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "nginx": {
+      "displayName": "Nginx",
+      "description": "Reverse proxy",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "kafka": {
+      "displayName": "Kafka",
+      "description": "Message broker",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "zookeeper": {
+      "displayName": "Zookeeper",
+      "description": "Kafka coordinator",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "minio": {
+      "displayName": "MinIO",
+      "description": "Object storage",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "jaeger": {
+      "displayName": "Jaeger",
+      "description": "Distributed tracing",
+      "hasOpenApi": false,
+      "infrastructure": true
+    },
+    "robotics": {
+      "displayName": "NexusRobotics",
+      "description": "Autonomous systems and drone control",
+      "hasOpenApi": false
+    },
+    "sandbox": {
+      "displayName": "Sandbox",
+      "description": "Code execution and LLM inference",
+      "hasOpenApi": true
+    },
+    "nested-learning": {
+      "displayName": "Nested Learning Coordinator",
+      "description": "Real-time streaming and meta-learning",
+      "hasOpenApi": false
+    }
+  },
+  "defaultMetadata": {
+    "displayNameFormat": "capitalize-words",
+    "descriptionTemplate": "{displayName} service",
+    "hasOpenApi": false,
+    "infrastructure": false
+  }
+}

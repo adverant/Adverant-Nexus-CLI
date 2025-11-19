@@ -19,6 +19,18 @@ import type {
   TransportError,
 } from '@nexus-cli/types';
 
+/**
+ * Connection state machine for MCP client
+ * Prevents race conditions and ensures proper state transitions
+ */
+enum ConnectionState {
+  DISCONNECTED = 'DISCONNECTED',
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
+  DISCONNECTING = 'DISCONNECTING',
+  ERROR = 'ERROR',
+}
+
 interface MCPServerInfo {
   name: string;
   version: string;
@@ -32,16 +44,64 @@ interface MCPServerInfo {
 export class MCPClient implements MCPTransport {
   private client: Client | null = null;
   private transport: StdioClientTransport | null = null;
-  private connected: boolean = false;
+  private connectionState: ConnectionState = ConnectionState.DISCONNECTED;
+  private connectPromise: Promise<void> | null = null;
   private config: MCPConfig | null = null;
   private serverInfo: MCPServerInfo | null = null;
 
   /**
-   * Connect to MCP server via stdio
+   * Connect to MCP server via stdio with state machine
+   * Prevents concurrent connection attempts and race conditions
    */
   async connect(config: MCPConfig): Promise<void> {
+    // Prevent concurrent connections - return existing promise if already connecting
+    if (this.connectionState === ConnectionState.CONNECTING) {
+      if (this.connectPromise) {
+        return this.connectPromise;
+      }
+      throw this.createError(
+        'MCP_CONNECTION_ERROR',
+        'Connection already in progress (no promise cached)'
+      );
+    }
+
+    // Already connected - do nothing
+    if (this.connectionState === ConnectionState.CONNECTED) {
+      return;
+    }
+
+    // Cannot connect while disconnecting
+    if (this.connectionState === ConnectionState.DISCONNECTING) {
+      throw this.createError(
+        'MCP_CONNECTION_ERROR',
+        'Cannot connect while disconnecting. Wait for disconnect to complete.'
+      );
+    }
+
+    // Start connection process
+    this.connectionState = ConnectionState.CONNECTING;
     this.config = config;
 
+    // Cache the connection promise to prevent concurrent attempts
+    this.connectPromise = this._performConnection(config);
+
+    try {
+      await this.connectPromise;
+      this.connectionState = ConnectionState.CONNECTED;
+    } catch (error) {
+      this.connectionState = ConnectionState.ERROR;
+      this.cleanup();
+      throw error;
+    } finally {
+      this.connectPromise = null;
+    }
+  }
+
+  /**
+   * Internal connection logic
+   * Separated to allow promise caching
+   */
+  private async _performConnection(config: MCPConfig): Promise<void> {
     try {
       if (!config.command) {
         throw new Error('MCP server command is required');
@@ -77,6 +137,13 @@ export class MCPClient implements MCPTransport {
         }
       );
 
+      // Set up error handler for transport before connecting
+      if (this.transport) {
+        // Add error listener to catch early failures
+        // Note: StdioClientTransport doesn't expose process directly,
+        // but we handle errors in the connect() call
+      }
+
       // Connect with optional timeout
       const connectPromise = this.client.connect(this.transport);
 
@@ -86,12 +153,9 @@ export class MCPClient implements MCPTransport {
         await connectPromise;
       }
 
-      this.connected = true;
-
       // Get server info
       await this.fetchServerInfo();
     } catch (error) {
-      this.cleanup();
       throw this.createError(
         'MCP_CONNECTION_ERROR',
         `Failed to connect to MCP server: ${(error as Error).message}`,
@@ -101,10 +165,31 @@ export class MCPClient implements MCPTransport {
   }
 
   /**
-   * Disconnect from MCP server
+   * Disconnect from MCP server with state management
    */
   async disconnect(): Promise<void> {
-    this.cleanup();
+    // Already disconnected - do nothing
+    if (this.connectionState === ConnectionState.DISCONNECTED) {
+      return;
+    }
+
+    // Cannot disconnect while connecting - wait for connection to finish first
+    if (this.connectionState === ConnectionState.CONNECTING && this.connectPromise) {
+      try {
+        await this.connectPromise;
+      } catch (error) {
+        // Connection failed, proceed with cleanup
+      }
+    }
+
+    // Set disconnecting state
+    this.connectionState = ConnectionState.DISCONNECTING;
+
+    try {
+      this.cleanup();
+    } finally {
+      this.connectionState = ConnectionState.DISCONNECTED;
+    }
   }
 
   /**
@@ -335,9 +420,18 @@ export class MCPClient implements MCPTransport {
 
   /**
    * Check if client is connected
+   * Now uses connection state for accuracy
    */
   isConnected(): boolean {
-    return this.connected && this.client !== null;
+    return this.connectionState === ConnectionState.CONNECTED && this.client !== null;
+  }
+
+  /**
+   * Get current connection state
+   * Useful for debugging and monitoring
+   */
+  getConnectionState(): string {
+    return this.connectionState;
   }
 
   /**
@@ -383,19 +477,24 @@ export class MCPClient implements MCPTransport {
 
   /**
    * Ensure client is connected
+   * Now checks actual connection state instead of boolean flag
    */
   private ensureConnected(): void {
-    if (!this.client || !this.connected) {
-      throw this.createError('MCP_NOT_CONNECTED', 'MCP client not connected');
+    if (this.connectionState !== ConnectionState.CONNECTED || !this.client) {
+      throw this.createError(
+        'MCP_NOT_CONNECTED',
+        `MCP client not connected (state: ${this.connectionState})`
+      );
     }
   }
 
   /**
    * Cleanup resources
+   * Note: Does not change connectionState - caller must manage that
    */
   private cleanup(): void {
-    this.connected = false;
     this.serverInfo = null;
+    this.connectPromise = null;
 
     if (this.client) {
       try {
@@ -457,16 +556,22 @@ export class MCPClient implements MCPTransport {
 
   /**
    * Get connection statistics
+   * Updated to include connection state
    */
   getStats(): {
     connected: boolean;
+    connectionState: string;
     serverInfo: MCPServerInfo | null;
     config: MCPConfig | null;
   } {
     return {
-      connected: this.connected,
+      connected: this.isConnected(),
+      connectionState: this.connectionState,
       serverInfo: this.serverInfo,
       config: this.config,
     };
   }
 }
+
+// Export ConnectionState enum for external use
+export { ConnectionState };

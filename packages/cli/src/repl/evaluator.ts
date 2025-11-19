@@ -181,33 +181,85 @@ export class CommandEvaluator {
   }
 
   /**
-   * Tokenize input line (handle quotes)
+   * Tokenize input line (handle quotes and escape sequences)
+   *
+   * Supports:
+   * - Single and double quoted strings
+   * - Escaped quotes inside strings: "He said \"hello\""
+   * - Mixed quote types: 'It\'s "quoted"'
+   * - Backslash escaping: "Path: C:\\Users\\name"
    */
   private tokenize(line: string): string[] {
     const tokens: string[] = [];
     let current = '';
     let inQuote = false;
     let quoteChar = '';
+    let escaped = false;
 
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
 
-      if ((char === '"' || char === "'") && !inQuote) {
-        inQuote = true;
-        quoteChar = char;
-      } else if (char === quoteChar && inQuote) {
-        inQuote = false;
-        quoteChar = '';
-      } else if (char === ' ' && !inQuote) {
+      // Handle escape character
+      if (char === '\\' && !escaped) {
+        escaped = true;
+        continue;
+      }
+
+      // Handle quote characters
+      if ((char === '"' || char === "'") && !escaped) {
+        if (!inQuote) {
+          // Start of quoted string
+          inQuote = true;
+          quoteChar = char;
+        } else if (char === quoteChar) {
+          // End of quoted string (matching quote type)
+          inQuote = false;
+          quoteChar = '';
+        } else {
+          // Different quote type inside string, add literally
+          current += char;
+        }
+      } else if (char === ' ' && !inQuote && !escaped) {
+        // Whitespace outside quotes - token boundary
         if (current) {
           tokens.push(current);
           current = '';
         }
       } else {
-        current += char;
+        // Regular character or escaped character
+        if (escaped) {
+          // Handle common escape sequences
+          switch (char) {
+            case 'n':
+              current += '\n';
+              break;
+            case 't':
+              current += '\t';
+              break;
+            case 'r':
+              current += '\r';
+              break;
+            case '\\':
+              current += '\\';
+              break;
+            case '"':
+            case "'":
+              current += char;
+              break;
+            default:
+              // Unknown escape sequence - keep backslash
+              current += '\\' + char;
+          }
+        } else {
+          current += char;
+        }
       }
+
+      // Reset escape flag after processing character
+      escaped = false;
     }
 
+    // Add final token if any
     if (current) {
       tokens.push(current);
     }

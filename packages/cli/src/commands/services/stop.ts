@@ -7,7 +7,12 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { execSync } from 'child_process';
+import {
+  stopContainer,
+  executeDockerCommand,
+  DockerExecutionError,
+  DockerErrorType,
+} from '../../core/docker/docker-executor.js';
 
 export function createStopCommand(): Command {
   const command = new Command('stop');
@@ -15,10 +20,13 @@ export function createStopCommand(): Command {
   command
     .description('Stop service(s)')
     .argument('[service]', 'Service name (optional, stops all if omitted)')
-    .action(async (serviceName) => {
+    .option('-t, --timeout <seconds>', 'Timeout before killing (default: 10)', '10')
+    .action(async (serviceName, options) => {
       try {
+        const timeout = parseInt(options.timeout, 10);
+
         if (serviceName) {
-          await stopSingleService(serviceName);
+          await stopSingleService(serviceName, timeout);
         } else {
           await stopAllServices();
         }
@@ -31,16 +39,13 @@ export function createStopCommand(): Command {
   return command;
 }
 
-async function stopSingleService(serviceName: string): Promise<void> {
+async function stopSingleService(serviceName: string, timeout: number = 10): Promise<void> {
   const spinner = ora(`Stopping ${serviceName}...`).start();
 
   try {
     const containerName = `nexus-${serviceName}`;
 
-    execSync(`docker stop ${containerName}`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    await stopContainer(containerName, timeout);
 
     spinner.succeed(chalk.green(`Stopped ${serviceName}`));
 
@@ -49,9 +54,19 @@ async function stopSingleService(serviceName: string): Promise<void> {
   } catch (error: any) {
     spinner.fail(chalk.red(`Failed to stop ${serviceName}`));
 
-    if (error.message.includes('No such container')) {
-      console.error(chalk.yellow(`\nContainer not found: nexus-${serviceName}`));
-      console.error(chalk.dim('Run "nexus services list" to see available services\n'));
+    if (error instanceof DockerExecutionError) {
+      if (error.type === DockerErrorType.NOT_FOUND) {
+        console.error(chalk.yellow(`\nContainer not found: nexus-${serviceName}`));
+        console.error(chalk.dim('Run "nexus services list" to see available services\n'));
+      } else if (error.type === DockerErrorType.NOT_RUNNING) {
+        console.error(chalk.red('\nDocker daemon is not running.'));
+        console.error(chalk.dim('Please start Docker and try again\n'));
+      } else if (error.type === DockerErrorType.TIMEOUT) {
+        console.error(chalk.red(`\nContainer did not stop within ${timeout} seconds.'));
+        console.error(chalk.dim('Try increasing the timeout with --timeout flag\n'));
+      } else {
+        console.error(chalk.red(`\n${error.message}\n`));
+      }
     } else {
       console.error(chalk.red(`\n${error.message}\n`));
     }
@@ -64,10 +79,10 @@ async function stopAllServices(): Promise<void> {
   const spinner = ora('Stopping all Nexus services...').start();
 
   try {
-    execSync('docker-compose -f docker/docker-compose.nexus.yml stop', {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    await executeDockerCommand(
+      'compose -f docker/docker-compose.nexus.yml stop',
+      { timeout: 60000 } // 60s timeout
+    );
 
     spinner.succeed(chalk.green('Stopped all Nexus services'));
 
@@ -77,13 +92,20 @@ async function stopAllServices(): Promise<void> {
   } catch (error: any) {
     spinner.fail(chalk.red('Failed to stop services'));
 
-    if (error.message.includes('docker-compose.nexus.yml')) {
-      console.error(
-        chalk.yellow('\nDocker Compose file not found.')
-      );
-      console.error(
-        chalk.dim('Make sure you are in the Nexus project root directory\n')
-      );
+    if (error instanceof DockerExecutionError) {
+      if (error.stderr?.includes('docker-compose.nexus.yml') ||
+          error.stderr?.includes('no such file')) {
+        console.error(chalk.yellow('\nDocker Compose file not found.'));
+        console.error(chalk.dim('Make sure you are in the Nexus project root directory\n'));
+      } else if (error.type === DockerErrorType.NOT_RUNNING) {
+        console.error(chalk.red('\nDocker daemon is not running.'));
+        console.error(chalk.dim('Please start Docker and try again\n'));
+      } else if (error.type === DockerErrorType.TIMEOUT) {
+        console.error(chalk.red('\nDocker compose stop operation timed out.'));
+        console.error(chalk.dim('Some services may still be running\n'));
+      } else {
+        console.error(chalk.red(`\n${error.message}\n`));
+      }
     } else {
       console.error(chalk.red(`\n${error.message}\n`));
     }

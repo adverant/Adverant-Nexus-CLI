@@ -7,7 +7,12 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { execSync } from 'child_process';
+import {
+  dockerInspect,
+  executeDockerCommand,
+  DockerExecutionError,
+  DockerErrorType,
+} from '../../core/docker/docker-executor.js';
 
 interface ContainerStatus {
   running: boolean;
@@ -59,12 +64,7 @@ export function createStatusCommand(): Command {
 
 async function getContainerStatus(containerName: string): Promise<ContainerStatus> {
   try {
-    const inspect = execSync(
-      `docker inspect ${containerName} --format '{{json .}}'`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
-    );
-
-    const data = JSON.parse(inspect);
+    const data = await dockerInspect(containerName);
     const state = data.State || {};
 
     const uptime = state.Running ? calculateUptime(state.StartedAt) : undefined;
@@ -78,26 +78,28 @@ async function getContainerStatus(containerName: string): Promise<ContainerStatu
       exitCode: state.ExitCode,
     };
   } catch (error) {
-    return {
-      running: false,
-      status: 'not-found',
-      health: 'none',
-    };
+    if (error instanceof DockerExecutionError && error.type === DockerErrorType.NOT_FOUND) {
+      return {
+        running: false,
+        status: 'not-found',
+        health: 'none',
+      };
+    }
+    throw error;
   }
 }
 
 async function getAllServices(): Promise<any[]> {
   try {
-    const output = execSync(
-      'docker ps -a --filter "name=nexus-" --format "{{.Names}}"',
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
+    const result = await executeDockerCommand(
+      'ps -a --filter "name=nexus-" --format "{{.Names}}"'
     );
 
-    if (!output.trim()) {
+    if (!result.stdout) {
       return [];
     }
 
-    const containers = output.trim().split('\n');
+    const containers = result.stdout.split('\n');
     const services = await Promise.all(
       containers.map(async (container) => {
         const name = container.replace('nexus-', '').replace(/-\d+$/, '');

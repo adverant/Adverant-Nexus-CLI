@@ -7,6 +7,7 @@
 import type { CommandContext, WorkspaceInfo } from '@nexus-cli/types';
 import type { NexusConfig } from '@nexus-cli/types';
 import type { SessionContext } from '@nexus-cli/types';
+import { sanitizeEnvironment } from './env-sanitizer.js';
 
 export interface REPLContext extends CommandContext {
   namespace?: string;
@@ -102,13 +103,18 @@ export class ContextManager {
 
   /**
    * Export context to session context
+   *
+   * Security Note: Environment variables are sanitized to prevent sensitive
+   * credentials (API keys, tokens, passwords) from being stored in plain text.
+   * Only allowlisted variables and NEXUS_* prefixed variables (excluding secrets)
+   * are included in the session.
    */
   toSessionContext(): SessionContext {
     return {
       ...(this.context.workspace && { workspace: this.context.workspace }),
       cwd: this.context.cwd,
       config: this.context.config,
-      environment: process.env as Record<string, string>,
+      environment: sanitizeEnvironment(process.env as Record<string, string>),
       services: Object.fromEntries(this.context.services.entries()),
     };
   }

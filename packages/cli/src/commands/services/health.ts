@@ -8,7 +8,12 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';
-import { execSync } from 'child_process';
+import {
+  isContainerRunning as dockerIsContainerRunning,
+  getContainerStatus,
+  DockerExecutionError,
+  DockerErrorType,
+} from '../../core/docker/docker-executor.js';
 
 interface HealthCheck {
   service: string;
@@ -136,14 +141,22 @@ async function checkServiceHealth(serviceName: string): Promise<HealthCheck> {
   }
 }
 
+/**
+ * Check if container is running using async docker executor
+ * Provides better error handling and doesn't block event loop
+ */
 async function isContainerRunning(containerName: string): Promise<boolean> {
   try {
-    const output = execSync(
-      `docker inspect -f '{{.State.Running}}' ${containerName}`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
-    );
-    return output.trim() === 'true';
+    return await dockerIsContainerRunning(containerName);
   } catch (error) {
+    if (error instanceof DockerExecutionError) {
+      // Log specific error types for better debugging
+      if (error.type === DockerErrorType.NOT_RUNNING) {
+        console.debug(`Docker daemon not running while checking ${containerName}`);
+      } else if (error.type === DockerErrorType.PERMISSION_DENIED) {
+        console.warn(`Permission denied when checking ${containerName}`);
+      }
+    }
     return false;
   }
 }

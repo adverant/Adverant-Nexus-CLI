@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/adverant/nexus-cli/schemas/service-metadata.json",
+  "title": "Nexus Service Metadata Configuration",
+  "description": "Configuration file for Nexus service display names, descriptions, and capabilities",
+  "type": "object",
+  "required": ["version", "services"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "services": {
+      "type": "object",
+      "description": "Service-specific metadata",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["displayName", "description"],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable service name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Service description"
+          },
+          "hasOpenApi": {
+            "type": "boolean",
+            "description": "Whether the service exposes an OpenAPI spec",
+            "default": false
+          },
+          "infrastructure": {
+            "type": "boolean",
+            "description": "Whether this is an infrastructure service (database, cache, etc.)",
+            "default": false
+          },
+          "aliases": {
+            "type": "array",
+            "description": "Alternative names for this service",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "defaultMetadata": {
+      "type": "object",
+      "description": "Default metadata for services not explicitly configured",
+      "properties": {
+        "displayNameFormat": {
+          "type": "string",
+          "enum": ["capitalize-words", "uppercase", "as-is"],
+          "description": "How to format display names by default"
+        },
+        "descriptionTemplate": {
+          "type": "string",
+          "description": "Template for generating descriptions ({displayName} is replaced)"
+        },
+        "hasOpenApi": {
+          "type": "boolean",
+          "description": "Default OpenAPI availability"
+        },
+        "infrastructure": {
+          "type": "boolean",
+          "description": "Default infrastructure flag"
+        }
+      }
+    }
+  }
+}

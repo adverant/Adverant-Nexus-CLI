@@ -14,34 +14,18 @@ import type {
   SessionSummary,
   SessionStorage as ISessionStorage,
 } from '@nexus-cli/types';
+import { SessionSchema } from '@nexus-cli/types';
 
 const SESSIONS_DIR = path.join(os.homedir(), '.nexus', 'sessions');
 
-// Session validation schema
-const sessionSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  created: z.date(),
-  updated: z.date(),
-  context: z.object({
-    workspace: z.any().optional(),
-    cwd: z.string(),
-    config: z.any(),
-    environment: z.record(z.string()),
-    services: z.record(z.any()),
-  }),
-  history: z.array(z.any()),
-  results: z.array(z.any()),
-  mcpMemories: z.array(z.string()),
-  metadata: z.object({
-    totalCommands: z.number(),
-    successfulCommands: z.number(),
-    failedCommands: z.number(),
-    totalDuration: z.number(),
-    lastCommand: z.string().optional(),
-    tags: z.array(z.string()),
-  }),
-});
+/**
+ * Secure file permissions for session files (read/write for owner only).
+ * This prevents other users on the system from reading session data.
+ */
+const SECURE_FILE_MODE = 0o600; // rw-------
+
+// Re-export session schema for internal use
+const sessionSchema = SessionSchema;
 
 export class SessionStorage implements ISessionStorage {
   /**
@@ -66,6 +50,9 @@ export class SessionStorage implements ISessionStorage {
 
   /**
    * Save session to disk
+   *
+   * Security: Session files are written with restricted permissions (0600)
+   * to prevent other users from reading potentially sensitive configuration data.
    */
   async save(session: Session): Promise<void> {
     await this.ensureSessionsDir();
@@ -76,6 +63,19 @@ export class SessionStorage implements ISessionStorage {
     const serialized = this.serializeSession(session);
 
     await fs.writeJson(filePath, serialized, { spaces: 2 });
+
+    // Set secure file permissions (owner read/write only)
+    // This is especially important because sessions may contain environment config
+    try {
+      await fs.chmod(filePath, SECURE_FILE_MODE);
+    } catch (error) {
+      // On Windows, chmod may not work as expected - log but don't fail
+      if (os.platform() !== 'win32') {
+        console.warn(
+          `Warning: Could not set secure permissions on session file: ${filePath}`
+        );
+      }
+    }
   }
 
   /**
