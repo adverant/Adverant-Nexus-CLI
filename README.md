@@ -1,4 +1,7 @@
-# Nexus CLI
+# nexus-cli
+
+**🚫 IMPORTANT**: [Read Docker Build Policy](./CLAUDE.md#-critical-docker-desktop-usage-policy) - All builds must be done on remote server!
+
 
 ```
            ⬡━━━━━━━━━⬡
