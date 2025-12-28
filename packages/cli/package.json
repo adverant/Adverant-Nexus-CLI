@@ -1,6 +1,6 @@
 {
   "name": "@adverant-nexus/cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "World-class CLI for Adverant-Nexus - Surpassing Claude Code and Gemini CLI",
   "main": "dist/index.js",
   "type": "module",
