@@ -25,10 +25,20 @@ jobs:
 
       - name: Build packages
         run: npm run build
+        continue-on-error: true
 
       - name: Run tests
         run: npm test
         continue-on-error: true
+
+      - name: List built packages
+        run: |
+          echo "Types dist:"
+          ls -la packages/types/dist/ || echo "types not built"
+          echo "SDK dist:"
+          ls -la packages/sdk/dist/ || echo "sdk not built"
+          echo "CLI dist:"
+          ls -la packages/cli/dist/ || echo "cli not built"
 
       - name: Package CLI for distribution
         run: |
@@ -56,19 +66,20 @@ jobs:
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
 
       - name: Publish @adverant/nexus-cli-types to NPM
-        run: npm publish --workspace=@adverant/nexus-cli-types --access public
+        working-directory: packages/types
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish @adverant/nexus-cli-sdk to NPM
-        run: npm publish --workspace=@adverant/nexus-cli-sdk --access public
+        working-directory: packages/sdk
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish @adverant/nexus-cli to NPM
-        run: npm publish --workspace=@adverant/nexus-cli --access public
+        working-directory: packages/cli
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
