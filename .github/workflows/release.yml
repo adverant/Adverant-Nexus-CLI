@@ -70,49 +70,56 @@ jobs:
           # Create checksums
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
 
-      - name: Debug NPM Token
+      - name: Debug npm environment
         run: |
-          echo "Checking if NPM_TOKEN secret is set..."
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "❌ ERROR: NODE_AUTH_TOKEN is empty!"
-            echo "Please configure NPM_TOKEN as a repository secret in GitHub Settings > Secrets and variables > Actions"
-            exit 1
-          fi
-          echo "✓ NPM_TOKEN is set (length: ${#NODE_AUTH_TOKEN} chars)"
+          echo "=== Debugging npm authentication ==="
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo ""
+          echo "=== Checking environment variables ==="
+          echo "NPM_TOKEN set: $(if [ -n '${{ secrets.NPM_TOKEN }}' ]; then echo 'YES'; else echo 'NO'; fi)"
+          echo "NPM_TOKEN length: ${#NPM_TOKEN_VALUE}"
+          echo ""
+          echo "=== Current .npmrc files ==="
+          echo "~/.npmrc:"
+          cat ~/.npmrc 2>/dev/null | sed 's/=.*/=***REDACTED***/' || echo "(not found)"
+          echo ""
+          echo ".npmrc in current dir:"
+          cat .npmrc 2>/dev/null | sed 's/=.*/=***REDACTED***/' || echo "(not found)"
+          echo ""
+          echo "=== npm config list ==="
+          npm config list
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN_VALUE: ${{ secrets.NPM_TOKEN }}
 
-      - name: Verify NPM Authentication
+      - name: Configure npm authentication
         run: |
-          echo "Verifying npm authentication..."
+          echo "Configuring npm authentication..."
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "✓ Created ~/.npmrc"
+          cat ~/.npmrc | sed 's/=.*/=***REDACTED***/'
+          echo ""
+          echo "Testing authentication..."
           npm whoami
           echo "✓ Authenticated as: $(npm whoami)"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @adverant-nexus/types to NPM
         working-directory: packages/types
         run: |
           echo "Publishing @adverant-nexus/types..."
           npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @adverant-nexus/sdk to NPM
         working-directory: packages/sdk
         run: |
           echo "Publishing @adverant-nexus/sdk..."
           npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @adverant-nexus/cli to NPM
         working-directory: packages/cli
         run: |
           echo "Publishing @adverant-nexus/cli..."
           npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
