@@ -44,7 +44,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@adverant/nexus-cli-types": "3.0.0",
+    "@adverant/nexus-cli-types": "*",
     "@modelcontextprotocol/sdk": "^0.5.0",
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.1",
