@@ -4,7 +4,7 @@
  * Parses and executes REPL commands
  */
 
-import type { Command, CommandResult } from '@adverant/nexus-cli-types';
+import type { Command, CommandResult } from '@adverant-nexus/types';
 import type { REPLContext } from '../session/context-manager.js';
 
 export interface ParsedCommand {

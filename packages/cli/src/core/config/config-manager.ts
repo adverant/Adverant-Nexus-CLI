@@ -17,11 +17,11 @@ import type {
   NexusConfig,
   GlobalConfig,
   Profile,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 import {
   NexusConfigSchema,
   GlobalConfigSchema,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 
 /**
  * Default configuration values

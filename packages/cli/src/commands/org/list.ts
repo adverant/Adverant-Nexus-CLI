@@ -10,7 +10,7 @@ import ora from 'ora';
 import Table from 'cli-table3';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { Organization } from '@adverant/nexus-cli-types';
+import type { Organization } from '@adverant-nexus/types';
 
 export function createListOrganizationsCommand(
   authClient: AuthClient,

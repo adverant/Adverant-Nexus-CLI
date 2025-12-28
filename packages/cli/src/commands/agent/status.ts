@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import type { AgentStatus } from '@adverant/nexus-cli-types';
+import type { AgentStatus } from '@adverant-nexus/types';
 
 export function createAgentStatusCommand(): Command {
   const command = new Command('status');

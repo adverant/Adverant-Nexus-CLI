@@ -72,28 +72,28 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @adverant/nexus-cli-types to NPM
+      - name: Publish @adverant-nexus/types to NPM
         working-directory: packages/types
         run: |
-          echo "Publishing @adverant/nexus-cli-types..."
+          echo "Publishing @adverant-nexus/types..."
           npm publish --access public 2>&1 || echo "Publish failed - may already exist"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
 
-      - name: Publish @adverant/nexus-cli-sdk to NPM
+      - name: Publish @adverant-nexus/sdk to NPM
         working-directory: packages/sdk
         run: |
-          echo "Publishing @adverant/nexus-cli-sdk..."
+          echo "Publishing @adverant-nexus/sdk..."
           npm publish --access public 2>&1 || echo "Publish failed - may already exist"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
 
-      - name: Publish @adverant/nexus-cli to NPM
+      - name: Publish @adverant-nexus/cli to NPM
         working-directory: packages/cli
         run: |
-          echo "Publishing @adverant/nexus-cli..."
+          echo "Publishing @adverant-nexus/cli..."
           npm publish --access public 2>&1 || echo "Publish failed - may already exist"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -7,7 +7,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import type { AuthCredentials, APIKey } from '@adverant/nexus-cli-types';
+import type { AuthCredentials, APIKey } from '@adverant-nexus/types';
 
 export interface CredentialsManagerConfig {
   credentialsDir?: string;

@@ -7,7 +7,7 @@
 
 import axios from 'axios';
 import { load as yamlLoad } from 'js-yaml';
-import type { ServiceCommand, CommandParameter } from '@adverant/nexus-cli-types';
+import type { ServiceCommand, CommandParameter } from '@adverant-nexus/types';
 
 /**
  * OpenAPI 3.x Specification

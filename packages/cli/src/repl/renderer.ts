@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import boxen from 'boxen';
 import { inspect } from 'util';
-import type { CommandResult } from '@adverant/nexus-cli-types';
+import type { CommandResult } from '@adverant-nexus/types';
 
 export class REPLRenderer {
   /**

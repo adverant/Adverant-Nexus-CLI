@@ -22,7 +22,7 @@ import type {
   TransportError,
   RetryConfig,
   RequestMetrics,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 
 export class HTTPClient implements HTTPTransport {
   private client: AxiosInstance;

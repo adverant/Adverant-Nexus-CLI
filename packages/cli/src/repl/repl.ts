@@ -6,7 +6,7 @@
 
 import readline from 'readline';
 import chalk from 'chalk';
-import type { Command, CommandResult, WorkspaceInfo } from '@adverant/nexus-cli-types';
+import type { Command, CommandResult, WorkspaceInfo } from '@adverant-nexus/types';
 import { ContextManager } from '../session/context-manager.js';
 import { HistoryManager } from '../session/history-manager.js';
 import { SessionManager } from '../session/session-manager.js';

@@ -1,5 +1,5 @@
 {
-  "name": "@adverant/nexus-cli-types",
+  "name": "@adverant-nexus/types",
   "version": "3.0.0",
   "description": "Shared TypeScript types and interfaces for Nexus CLI ecosystem",
   "main": "dist/index.js",

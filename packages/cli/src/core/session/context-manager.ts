@@ -4,9 +4,9 @@
  * Manages REPL context including namespace, workspace, and session metadata
  */
 
-import type { CommandContext, WorkspaceInfo } from '@adverant/nexus-cli-types';
-import type { NexusConfig } from '@adverant/nexus-cli-types';
-import type { SessionContext } from '@adverant/nexus-cli-types';
+import type { CommandContext, WorkspaceInfo } from '@adverant-nexus/types';
+import type { NexusConfig } from '@adverant-nexus/types';
+import type { SessionContext } from '@adverant-nexus/types';
 import { sanitizeEnvironment } from './env-sanitizer.js';
 
 export interface REPLContext extends CommandContext {

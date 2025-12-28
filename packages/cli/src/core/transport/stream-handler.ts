@@ -15,7 +15,7 @@ import type {
   StreamOptions,
   StreamChunk,
   TransportError,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 import { HTTPClient } from './http-client.js';
 import { WebSocketClient } from './websocket-client.js';
 

@@ -8,7 +8,7 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
-import type { Plugin, PluginManifest, PluginCommand } from '@adverant/nexus-cli-types';
+import type { Plugin, PluginManifest, PluginCommand } from '@adverant-nexus/types';
 
 /**
  * Plugin discovery configuration options
@@ -168,7 +168,7 @@ function validateManifest(manifest: PluginManifest): void {
  * @param command - Command definition to validate
  * @throws Error if command is invalid
  */
-function validateCommand(command: import('@adverant/nexus-cli-types').PluginCommandDef): void {
+function validateCommand(command: import('@adverant-nexus/types').PluginCommandDef): void {
   if (!command.name) {
     throw new Error('Command missing required field: name');
   }

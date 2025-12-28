@@ -12,8 +12,8 @@ import type {
   Session,
   SessionSummary,
   SessionStorage as ISessionStorage,
-} from '@adverant/nexus-cli-types';
-import { SessionSchema } from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
+import { SessionSchema } from '@adverant-nexus/types';
 
 const SESSIONS_DIR = path.join(os.homedir(), '.nexus', 'sessions');
 

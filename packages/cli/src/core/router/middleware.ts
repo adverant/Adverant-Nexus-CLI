@@ -13,7 +13,7 @@ import type {
   CommandArgs,
   CommandContext,
   CommandResult,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 
 /**
  * Middleware function type

@@ -17,7 +17,7 @@ import type {
   WSOptions,
   WSEventHandler,
   TransportError,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 
 interface BufferedMessage {
   event: string;

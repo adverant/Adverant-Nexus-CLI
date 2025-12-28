@@ -13,8 +13,8 @@ import type {
   ServiceMetadata,
   PortMapping,
   ServiceCapability
-} from '@adverant/nexus-cli-types';
-import { ServiceStatus } from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
+import { ServiceStatus } from '@adverant-nexus/types';
 import {
   loadServiceMetadata,
   getDisplayName,

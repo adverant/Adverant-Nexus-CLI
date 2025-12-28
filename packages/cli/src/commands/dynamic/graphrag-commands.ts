@@ -4,7 +4,7 @@
  * Commands for interacting with the GraphRAG service
  */
 
-import type { Command, CommandHandler } from '@adverant/nexus-cli-types';
+import type { Command, CommandHandler } from '@adverant-nexus/types';
 import { HTTPClient } from '../../core/transport/http-client.js';
 
 export const storeDocumentHandler: CommandHandler = async (args, context) => {

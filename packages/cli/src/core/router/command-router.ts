@@ -14,7 +14,7 @@ import type {
   CommandArgs,
   CommandContext,
   CommandResult,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 import { CommandRegistry } from './command-registry.js';
 
 /**

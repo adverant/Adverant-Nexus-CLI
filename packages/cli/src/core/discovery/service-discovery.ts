@@ -12,9 +12,9 @@ import type {
   ServiceMetadata,
   ServiceHealth,
   ServiceCommand
-} from '@adverant/nexus-cli-types';
-import { ServiceStatus } from '@adverant/nexus-cli-types';
-import type { Plugin } from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
+import { ServiceStatus } from '@adverant-nexus/types';
+import type { Plugin } from '@adverant-nexus/types';
 import {
   parseMultipleComposeFiles,
   filterApplicationServices

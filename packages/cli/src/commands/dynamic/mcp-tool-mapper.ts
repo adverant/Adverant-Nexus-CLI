@@ -5,8 +5,8 @@
  * Parses tool schemas and generates command structures
  */
 
-import type { Command, ArgumentDefinition, OptionDefinition } from '@adverant/nexus-cli-types';
-import type { MCPToolDefinition, MCPToolCategory } from '@adverant/nexus-cli-types';
+import type { Command, ArgumentDefinition, OptionDefinition } from '@adverant-nexus/types';
+import type { MCPToolDefinition, MCPToolCategory } from '@adverant-nexus/types';
 
 export interface MCPToolMapping {
   tool: MCPToolDefinition;

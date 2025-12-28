@@ -13,7 +13,7 @@ import type {
   Command,
   CommandRegistry as ICommandRegistry,
   DynamicCommandSource,
-} from '@adverant/nexus-cli-types';
+} from '@adverant-nexus/types';
 
 /**
  * Command Registry Implementation

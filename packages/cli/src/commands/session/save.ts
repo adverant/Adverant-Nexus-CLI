@@ -9,7 +9,7 @@ import chalk from 'chalk';
 import { v4 as uuidv4 } from 'uuid';
 import { SessionStorage } from '../../core/session/session-storage.js';
 import { SessionManager } from '../../core/session/session-manager.js';
-import type { Session } from '@adverant/nexus-cli-types';
+import type { Session } from '@adverant-nexus/types';
 
 export function createSessionSaveCommand(): Command {
   const command = new Command('save')

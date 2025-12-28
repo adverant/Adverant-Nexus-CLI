@@ -10,8 +10,8 @@
     "baseUrl": "./src",
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "paths": {
-      "@adverant/nexus-cli-types": ["../../types/src"],
-      "@adverant/nexus-cli-sdk": ["../../sdk/src"]
+      "@adverant-nexus/types": ["../../types/src"],
+      "@adverant-nexus/sdk": ["../../sdk/src"]
     }
   },
   "include": [

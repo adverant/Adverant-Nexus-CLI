@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { APIKey } from '@adverant/nexus-cli-types';
+import type { APIKey } from '@adverant-nexus/types';
 
 export function createDeleteAPIKeyCommand(
   authClient: AuthClient,

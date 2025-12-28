@@ -12,7 +12,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execaCommand } from 'execa';
 import { glob } from 'glob';
-import type { NexusConfig } from '@adverant/nexus-cli-types';
+import type { NexusConfig } from '@adverant-nexus/types';
 
 export interface WorkspaceInfo {
   cwd: string;
