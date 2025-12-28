@@ -99,9 +99,8 @@ jobs:
           echo "✓ Created ~/.npmrc"
           cat ~/.npmrc | sed 's/=.*/=***REDACTED***/'
           echo ""
-          echo "Testing authentication..."
-          npm whoami
-          echo "✓ Authenticated as: $(npm whoami)"
+          echo "Testing authentication (may fail if token is automation type)..."
+          npm whoami || echo "npm whoami failed - this is OK for automation tokens"
 
       - name: Publish @adverant-nexus/types to NPM
         working-directory: packages/types
