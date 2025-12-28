@@ -21,10 +21,16 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "Installing dependencies..."
+          npm ci
+          echo "Dependencies installed successfully"
 
       - name: Build packages
-        run: npm run build
+        run: |
+          echo "Building packages..."
+          npm run build
+          echo "Build completed successfully"
 
       - name: Run tests
         run: npm test
@@ -64,14 +70,23 @@ jobs:
           # Create checksums
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
 
-      - name: Verify NPM Authentication
+      - name: Debug NPM Token
         run: |
-          echo "Checking npm authentication..."
+          echo "Checking if NPM_TOKEN secret is set..."
           if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "ERROR: NODE_AUTH_TOKEN is not set. Please configure NPM_TOKEN secret."
+            echo "❌ ERROR: NODE_AUTH_TOKEN is empty!"
+            echo "Please configure NPM_TOKEN as a repository secret in GitHub Settings > Secrets and variables > Actions"
             exit 1
           fi
+          echo "✓ NPM_TOKEN is set (length: ${#NODE_AUTH_TOKEN} chars)"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify NPM Authentication
+        run: |
+          echo "Verifying npm authentication..."
           npm whoami
+          echo "✓ Authenticated as: $(npm whoami)"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
