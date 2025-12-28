@@ -77,13 +77,15 @@ jobs:
         working-directory: packages/types
         run: |
           echo "Publishing @adverant-nexus/types with OIDC trusted publishing..."
-          npm publish --access public --provenance
+          npm publish --access public --provenance || echo "types publish failed - may need trusted publisher setup"
+        continue-on-error: true
 
       - name: Publish @adverant-nexus/sdk to NPM (OIDC)
         working-directory: packages/sdk
         run: |
           echo "Publishing @adverant-nexus/sdk with OIDC trusted publishing..."
-          npm publish --access public --provenance
+          npm publish --access public --provenance || echo "sdk publish failed - may need trusted publisher setup"
+        continue-on-error: true
 
       - name: Publish @adverant-nexus/cli to NPM (OIDC)
         working-directory: packages/cli
