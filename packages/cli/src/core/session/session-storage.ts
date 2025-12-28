@@ -8,13 +8,12 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { z } from 'zod';
 import type {
   Session,
   SessionSummary,
   SessionStorage as ISessionStorage,
-} from '@nexus-cli/types';
-import { SessionSchema } from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
+import { SessionSchema } from '@adverant/nexus-cli-types';
 
 const SESSIONS_DIR = path.join(os.homedir(), '.nexus', 'sessions');
 

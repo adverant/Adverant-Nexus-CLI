@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { CreateAPIKeyRequest } from '@nexus-cli/types';
+import type { CreateAPIKeyRequest } from '@adverant/nexus-cli-types';
 
 const AVAILABLE_PERMISSIONS = [
   'graphrag:query',

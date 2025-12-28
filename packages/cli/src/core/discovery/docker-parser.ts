@@ -13,8 +13,8 @@ import type {
   ServiceMetadata,
   PortMapping,
   ServiceCapability
-} from '@nexus-cli/types';
-import { ServiceStatus } from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
+import { ServiceStatus } from '@adverant/nexus-cli-types';
 import {
   loadServiceMetadata,
   getDisplayName,
@@ -296,22 +296,6 @@ function detectCapabilities(
 }
 
 /**
- * @deprecated Use getDisplayName from service-metadata-loader.ts instead
- * This function is kept for backwards compatibility but will be removed in a future version
- */
-function generateDisplayName(_name: string): string {
-  throw new Error('generateDisplayName is deprecated. Use getDisplayName from service-metadata-loader.ts');
-}
-
-/**
- * @deprecated Use getDescription from service-metadata-loader.ts instead
- * This function is kept for backwards compatibility but will be removed in a future version
- */
-function generateDescription(_name: string, _service: DockerComposeService): string {
-  throw new Error('generateDescription is deprecated. Use getDescription from service-metadata-loader.ts');
-}
-
-/**
  * Detect health endpoint
  *
  * @param service - Service configuration
@@ -352,14 +336,6 @@ function detectHealthEndpoint(service: DockerComposeService, port: number): stri
   }
 
   return '/health';
-}
-
-/**
- * @deprecated Use hasOpenApiSpec from service-metadata-loader.ts instead
- * This function is kept for backwards compatibility but will be removed in a future version
- */
-function detectOpenApiSpec(_name: string, _port: number): string | undefined {
-  throw new Error('detectOpenApiSpec is deprecated. Use hasOpenApiSpec from service-metadata-loader.ts');
 }
 
 /**

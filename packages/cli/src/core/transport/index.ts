@@ -23,4 +23,4 @@ export type {
   TransportError,
   RequestMetrics,
   RetryConfig,
-} from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';

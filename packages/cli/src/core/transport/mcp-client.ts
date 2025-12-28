@@ -17,7 +17,7 @@ import type {
   MCPConfig,
   MCPTool,
   TransportError,
-} from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
 
 /**
  * Connection state machine for MCP client

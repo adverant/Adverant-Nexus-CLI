@@ -15,7 +15,7 @@ import type {
   SessionContext,
   HistoryEntry,
   SessionResult,
-} from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
 
 const SESSIONS_DIR = path.join(os.homedir(), '.nexus', 'sessions');
 

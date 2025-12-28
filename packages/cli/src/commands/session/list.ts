@@ -8,7 +8,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { SessionStorage } from '../../core/session/session-storage.js';
-import type { SessionSummary } from '@nexus-cli/types';
+import type { SessionSummary } from '@adverant/nexus-cli-types';
 
 export function createSessionListCommand(): Command {
   const command = new Command('list')

@@ -313,20 +313,34 @@ export async function getContainerStatus(containerName: string): Promise<{
 }> {
   const container = await dockerInspect(containerName);
 
-  return {
+  const result: {
+    State: string;
+    Running: boolean;
+    Paused: boolean;
+    Restarting: boolean;
+    Dead: boolean;
+    Status: string;
+    Health?: {
+      Status: string;
+      FailingStreak: number;
+    };
+  } = {
     State: container.State?.Status || 'unknown',
     Running: container.State?.Running || false,
     Paused: container.State?.Paused || false,
     Restarting: container.State?.Restarting || false,
     Dead: container.State?.Dead || false,
     Status: container.State?.Status || 'unknown',
-    Health: container.State?.Health
-      ? {
-          Status: container.State.Health.Status,
-          FailingStreak: container.State.Health.FailingStreak || 0,
-        }
-      : undefined,
   };
+
+  if (container.State?.Health) {
+    result.Health = {
+      Status: container.State.Health.Status,
+      FailingStreak: container.State.Health.FailingStreak || 0,
+    };
+  }
+
+  return result;
 }
 
 /**

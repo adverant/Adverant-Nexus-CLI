@@ -12,9 +12,9 @@ import type {
   ServiceMetadata,
   ServiceHealth,
   ServiceCommand
-} from '@nexus-cli/types';
-import { ServiceStatus } from '@nexus-cli/types';
-import type { Plugin } from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
+import { ServiceStatus } from '@adverant/nexus-cli-types';
+import type { Plugin } from '@adverant/nexus-cli-types';
 import {
   parseMultipleComposeFiles,
   filterApplicationServices
@@ -92,7 +92,7 @@ export async function discoverServices(
   const services = await parseMultipleComposeFiles(composeFiles);
 
   // Filter out infrastructure services (databases, etc.)
-  const appServices = filterApplicationServices(services);
+  const appServices = await filterApplicationServices(services);
 
   // Check health status if not skipped
   if (!skipHealthCheck) {

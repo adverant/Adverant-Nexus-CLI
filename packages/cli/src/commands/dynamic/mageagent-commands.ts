@@ -4,7 +4,7 @@
  * Commands for interacting with the MageAgent service
  */
 
-import type { Command, CommandHandler } from '@nexus-cli/types';
+import type { Command, CommandHandler } from '@adverant/nexus-cli-types';
 import { HTTPClient } from '../../core/transport/http-client.js';
 
 export const orchestrateHandler: CommandHandler = async (args, context) => {

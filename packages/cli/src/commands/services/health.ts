@@ -10,7 +10,6 @@ import Table from 'cli-table3';
 import ora from 'ora';
 import {
   isContainerRunning as dockerIsContainerRunning,
-  getContainerStatus,
   DockerExecutionError,
   DockerErrorType,
 } from '../../core/docker/docker-executor.js';

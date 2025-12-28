@@ -6,7 +6,7 @@
  */
 
 import axios from 'axios';
-import type { ServiceCommand, CommandParameter } from '@nexus-cli/types';
+import type { ServiceCommand, CommandParameter } from '@adverant/nexus-cli-types';
 
 /**
  * MCP Tool Definition

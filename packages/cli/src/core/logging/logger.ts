@@ -214,8 +214,11 @@ export class Logger {
       level,
       message,
       context: { ...this.config.defaultContext, ...context },
-      error,
     };
+
+    if (error) {
+      entry.error = error;
+    }
 
     // Console output
     if (this.config.jsonOutput) {
@@ -337,7 +340,7 @@ export class Logger {
   async close(): Promise<void> {
     if (this.logStream && !this.logStream.destroyed) {
       return new Promise((resolve, reject) => {
-        this.logStream!.end((err) => {
+        this.logStream!.end((err: Error | null) => {
           if (err) reject(err);
           else resolve();
         });
@@ -391,10 +394,19 @@ export function configureFromFlags(flags: {
   const config: LoggerConfig = {
     level,
     logToFile: !!flags.logFile,
-    logFilePath: flags.logFile,
-    jsonOutput: flags.jsonOutput,
-    showTimestamps: flags.verbose || flags.debug,
   };
+
+  if (flags.verbose || flags.debug) {
+    config.showTimestamps = true;
+  }
+
+  if (flags.logFile) {
+    config.logFilePath = flags.logFile;
+  }
+
+  if (flags.jsonOutput) {
+    config.jsonOutput = flags.jsonOutput;
+  }
 
   globalLogger = new Logger(config);
 }

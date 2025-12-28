@@ -91,3 +91,37 @@ export type SessionResult = z.infer<typeof SessionResultSchema>;
 export type SessionMetadata = z.infer<typeof SessionMetadataSchema>;
 export type Session = z.infer<typeof SessionSchema>;
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
+
+/**
+ * Session Storage interface
+ * Defines the contract for session persistence implementations
+ */
+export interface SessionStorage {
+  save(session: Session): Promise<void>;
+  load(id: string): Promise<Session | null>;
+  delete(id: string): Promise<void>;
+  list(): Promise<SessionSummary[]>;
+}
+
+/**
+ * History Manager interface
+ * Defines the contract for command history management
+ */
+export interface HistoryManager {
+  add(entry: HistoryEntry): void;
+  get(id: string): HistoryEntry | undefined;
+  list(limit?: number): HistoryEntry[];
+  search(query: string): HistoryEntry[];
+  clear(): void;
+  getPrevious(): string | undefined;
+  getNext(): string | undefined;
+  resetIndex(): void;
+  getCommands(): string[];
+  createEntry(
+    command: string,
+    args: unknown,
+    namespace?: string,
+    success?: boolean,
+    duration?: number
+  ): HistoryEntry;
+}

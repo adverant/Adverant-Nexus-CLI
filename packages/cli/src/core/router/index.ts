@@ -37,7 +37,7 @@ export {
   createDefaultMiddleware,
 } from './middleware.js';
 
-// Type re-exports from @nexus-cli/types
+// Type re-exports from @adverant/nexus-cli-types
 export type {
   Command,
   CommandHandler,
@@ -52,4 +52,4 @@ export type {
   OptionDefinition,
   ArgumentType,
   WorkspaceInfo,
-} from '@nexus-cli/types';
+} from '@adverant/nexus-cli-types';
