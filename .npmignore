@@ -1,0 +1,60 @@
+# Source files (only dist/ should be published)
+src/
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Development files
+.github/
+.vscode/
+.idea/
+docs/
+
+# AI Assistant configs
+.claude/
+CLAUDE.md
+
+# Documentation (except essentials)
+*.md
+!README.md
+!LICENSE
+!CHANGELOG.md
+
+# Config files
+.editorconfig
+.eslintrc*
+.prettierrc*
+eslint.config.*
+prettier.config.*
+tsconfig*.json
+vitest.config.*
+jest.config.*
+
+# Test and coverage
+coverage/
+.nyc_output/
+
+# Environment files
+.env*
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.eslintcache
+.turbo/
+.rpt2_cache*/
+
+# Package tarballs
+*.tgz
+
+# Examples (optional - remove if you want examples in package)
+examples/

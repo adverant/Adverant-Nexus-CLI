@@ -1,159 +1,523 @@
-# nexus-cli
+<div align="center">
+  <img src="docs/images/adverant-logo-final.svg" alt="Adverant" width="280"/>
 
-**🚫 IMPORTANT**: [Read Docker Build Policy](./CLAUDE.md#-critical-docker-desktop-usage-policy) - All builds must be done on remote server!
+  # Nexus CLI
 
+  **Enterprise-Grade CLI for AI-Powered Development**
 
-```
-           ⬡━━━━━━━━━⬡
-          ⬡   Auth    ⬡
-         ⬡━━━━━⬡━━━━━⬡
-        ⬡ GraphRAG  ⬡
-       ⬡━━━━━━━━━━━━━⬡
-      ⬡       🔷      ⬡
-     ⬡━━━━━ NEXUS ━━━━━⬡
-      ⬡       CLI     ⬡
-       ⬡━━━━━━━━━━━━━⬡
-        ⬡  MageAgent ⬡
-         ⬡━━━━━⬡━━━━━⬡
-          ⬡  Gateway ⬡
-           ⬡━━━━━━━━━⬡
-```
+  [![npm version](https://img.shields.io/npm/v/@nexus-cli/cli.svg)](https://www.npmjs.com/package/@nexus-cli/cli)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green.svg)](https://nodejs.org/)
 
-> World-class command-line interface for the Adverant-Nexus platform - Surpassing Claude Code CLI and Gemini CLI
+  **Version:** 3.0.0 | **Last Updated:** December 2024
 
-[![Version](https://img.shields.io/npm/v/@nexus-cli/cli.svg)](https://www.npmjs.com/package/@nexus-cli/cli)
-[![License](https://img.shields.io/npm/l/@nexus-cli/cli.svg)](https://github.com/adverant/nexus-cli/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green.svg)](https://nodejs.org/)
+  [Why Nexus?](#why-nexus-cli) &#8226; [Features](#-features) &#8226; [Quick Start](#-quick-start) &#8226; [Commands](#-command-reference) &#8226; [Architecture](#-architecture) &#8226; [Contributing](#-contributing)
 
-## Overview
+</div>
 
-The **Nexus CLI** is a production-grade, auto-discovering command-line interface that provides unified access to the entire Adverant-Nexus microservices ecosystem. Built with intelligent automation, extensibility, and developer experience at its core.
+---
 
 ## Why Nexus CLI?
 
-| Feature | Nexus CLI | Claude Code | Gemini CLI |
-|---------|-----------|-------------|------------|
-| **Auto-Discovery** | ✅ All services & plugins | ❌ Manual | ❌ Manual |
-| **Service Commands** | ✅ 32+ services | ❌ Single agent | ❌ Single agent |
-| **MCP Tools** | ✅ 70+ tools exposed | ❌ N/A | ❌ N/A |
-| **Plugin System** | ✅ Full SDK | ✅ Skills | ✅ Extensions |
-| **Interactive REPL** | ✅ Full-featured | ❌ Chat only | ✅ Yes |
-| **Streaming** | ✅ WebSocket + SSE | ✅ Yes | ✅ Yes |
-| **ReAct Agent** | ✅ 20 iterations | ✅ Task agent | ❌ No |
-| **Multi-Agent** | ✅ 10+ agents | ❌ Single | ❌ Single |
-| **Workflow Automation** | ✅ YAML + Visual | ❌ None | ⚠️ Limited |
-| **AI-Powered Suggestions** | ✅ ML-based | ⚠️ Basic | ⚠️ Basic |
-| **Real-time Monitoring** | ✅ Dashboard | ❌ None | ❌ None |
-| **Cost Tracking** | ✅ Built-in | ❌ None | ❌ None |
-| **Collaboration** | ✅ Multi-user sessions | ❌ None | ❌ None |
+**Most AI CLIs give you a chatbot. Nexus gives you a command center.**
 
-## Features
+Developers often juggle multiple tools, copy context between terminals, and lose track of what each system knows. Nexus CLI was built to unify your AI-powered workflow into a single, coherent interface.
 
-### 🚀 Auto-Discovery & Integration
-- **Automatic service detection** from docker-compose.yml and Kubernetes
-- **OpenAPI schema parsing** for automatic command generation
-- **MCP tool discovery** for Adverant-Nexus system integration
-- **Plugin auto-loading** from ~/.nexus/plugins/
-- **32+ microservices** accessible via single CLI
-- **500+ API endpoints** exposed as commands
+### Key Capabilities
 
-### 🤖 Intelligent Automation
-- **AI-powered command suggestions** based on usage patterns
-- **Natural language commands**: `nexus ask "How do I deploy GraphRAG?"`
-- **Context-aware execution** with smart parameter binding
-- **ReAct agent mode** for autonomous task execution
-- **Multi-agent orchestration** (up to 10 agents)
-- **Workflow templates** with YAML definitions
-- **Interactive workflow builder** (TUI)
+| Capability | Description |
+|------------|-------------|
+| **Auto-Discovery** | Automatically detects and integrates 32+ microservices |
+| **MCP Integration** | 70+ Model Context Protocol tools exposed as commands |
+| **Multi-Agent Orchestration** | Run 10+ concurrent AI agents for complex tasks |
+| **ReAct Agent Mode** | Autonomous task execution with up to 20 iterations |
+| **Interactive REPL** | Full-featured shell with history and tab completion |
+| **Plugin SDK** | Complete extensibility for custom integrations |
+| **Workflow Automation** | YAML-based workflows with visual builder |
+| **Real-time Monitoring** | Dashboard with alerts and performance metrics |
+| **Cost Tracking** | Built-in usage analytics per operation |
+| **Session Management** | Save, resume, and checkpoint your work |
+| **Collaboration** | Multi-user sessions for team workflows |
+| **Streaming** | WebSocket and SSE support for real-time updates |
 
-### 🔌 Extensible Architecture
-- **Plugin SDK** for third-party extensions
-- **MCP protocol** support for tool integration
+---
+
+## The Problem We Solve
+
+```
+                    ┌─────────────────────────────────────────────────────────┐
+                    │            BEFORE: Fragmented Tooling                   │
+                    │                                                         │
+  ┌──────────┐      │   ┌──────────┐  ┌──────────┐  ┌──────────┐             │
+  │ Your     │──────│──▶│ Tool A   │  │ Custom   │  │ Tool B   │             │
+  │ Terminal │      │   │          │  │ Scripts  │  │          │             │
+  └──────────┘      │   └────┬─────┘  └────┬─────┘  └────┬─────┘             │
+                    │        │             │             │                    │
+                    │        ▼             ▼             ▼                    │
+                    │   ┌──────────────────────────────────────┐             │
+                    │   │  Context Lost  │  No Integration    │             │
+                    │   │  Manual Sync   │  Limited Features  │             │
+                    │   └──────────────────────────────────────┘             │
+                    └─────────────────────────────────────────────────────────┘
+
+                    ┌─────────────────────────────────────────────────────────┐
+                    │            AFTER: Unified Command Center                │
+                    │                                                         │
+  ┌──────────┐      │              ┌─────────────────────┐                   │
+  │ Your     │──────│─────────────▶│     NEXUS CLI       │                   │
+  │ Terminal │      │              │  ┌───────────────┐  │                   │
+  └──────────┘      │              │  │ 32+ Services  │  │                   │
+                    │              │  │ 70+ MCP Tools │  │                   │
+                    │              │  │ 10+ Agents    │  │                   │
+                    │              │  │ Full Context  │  │                   │
+                    │              │  └───────────────┘  │                   │
+                    │              └──────────┬──────────┘                   │
+                    │                         │                              │
+                    │   ┌──────────┬──────────┼──────────┬──────────┐       │
+                    │   ▼          ▼          ▼          ▼          ▼       │
+                    │ GraphRAG  MageAgent  Gateway  Analytics  DevOps       │
+                    └─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## &#10024; Features
+
+### &#128640; Auto-Discovery & Integration
+
+Stop configuring. Start building.
+
+- **Automatic service detection** from Docker Compose, Kubernetes, and OpenAPI specs
+- **70+ MCP tools** exposed through Model Context Protocol integration
+- **32+ microservices** accessible through a single CLI
+- **500+ API endpoints** auto-generated as commands
+- **Plugin auto-loading** from `~/.nexus/plugins/`
+
+```bash
+# Nexus discovers your entire stack automatically
+nexus services list
+# Output: 32 services discovered, 47 healthy, 0 degraded
+
+nexus mcp tools
+# Output: 70 tools available across 12 providers
+```
+
+### &#129302; Intelligent Automation
+
+Your AI that actually gets things done.
+
+- **Natural language commands**: Just describe what you want
+- **ReAct agent mode**: 20 autonomous iterations with reasoning
+- **Multi-agent orchestration**: Up to 10 concurrent specialized agents
+- **Context-aware execution**: Remembers your stack, preferences, and patterns
+- **Workflow templates**: YAML-defined automation pipelines
+
+```bash
+# Natural language - Nexus understands intent
+nexus ask "Deploy the latest GraphRAG changes to staging"
+
+# ReAct agent - autonomous problem solving
+nexus agent task "Analyze the codebase and suggest performance improvements" --iterations 20
+
+# Multi-agent - parallel specialized work
+nexus agent orchestrate --agents "code-review,security-scan,test-coverage"
+```
+
+### &#128268; Extensible Architecture
+
+Build on top of Nexus, don't work around it.
+
+- **Plugin SDK** with full TypeScript support
+- **Hot-reloadable** plugins without restart
+- **Permission-based sandbox** for security
 - **Custom commands** via workspace configuration
-- **Hot-reloadable** plugin system
-- **Permission-based** plugin sandbox
+- **MCP protocol** support for tool integration
 
-### 📊 Multiple Output Formats
-- **Text** (human-readable with colors)
-- **JSON** (machine-parseable)
-- **YAML** (configuration files)
-- **Table** (structured data)
-- **Stream-JSON** (real-time events)
+```typescript
+// Create a plugin in minutes
+import { NexusPlugin, command } from '@nexus-cli/sdk';
 
-### 🎨 Rich Developer Experience
-- **Interactive REPL** mode with history
-- **Tab completion** for all commands
-- **Session checkpointing** (save/resume work)
-- **Streaming progress** for long operations
-- **Git integration** (status, diff, commit)
-- **Performance profiling** and optimization suggestions
+export default class MyPlugin extends NexusPlugin {
+  @command('greet', 'Say hello')
+  async greet(name: string) {
+    return `Hello, ${name}! Welcome to Nexus.`;
+  }
+}
+```
 
-### 🔍 Real-time Monitoring
+### &#127912; Rich Developer Experience
+
+Built by developers, for developers who demand excellence.
+
+- **Interactive REPL** with full history and tab completion
+- **Session checkpointing**: Save work, switch contexts, resume later
+- **Multiple output formats**: JSON, YAML, Table, Streaming
+- **Git integration**: Status, diff, commit from Nexus
+- **Real-time streaming**: Watch operations as they happen
+
+```bash
+# Interactive mode - your AI command center
+nexus repl
+
+nexus> services health --all
+nexus> agent start research --topic "GraphRAG optimization"
+nexus> session save "morning-work"
+nexus> exit
+
+# Resume exactly where you left off
+nexus session load "morning-work"
+```
+
+### &#128202; Monitoring & Analytics
+
+Know everything. Miss nothing.
+
 - **Service health dashboard** with live updates
-- **Custom alert conditions** and notifications
-- **Performance metrics** tracking
+- **Custom alert conditions** with webhooks and notifications
+- **Performance metrics** per operation
 - **Cost tracking** for API operations
-- **Time-series analytics** and reporting
-
-### 🤝 Collaboration Features
-- **Real-time session sharing** with team members
-- **Session export/import** for reproducibility
-- **Command history** sync across team
-- **Conflict resolution** for concurrent commands
-
-## Installation
-
-### 📦 Precompiled Binary (Quick Start)
-
-Download the latest precompiled binary for your platform:
-
-**macOS (Intel & Apple Silicon)**
-```bash
-# Download and install
-curl -L https://github.com/adverant/nexus-cli/releases/latest/download/nexus-macos -o nexus
-chmod +x nexus
-sudo mv nexus /usr/local/bin/
-
-# Verify installation
-nexus --version
-```
-
-**Linux (x64)**
-```bash
-# Download and install
-curl -L https://github.com/adverant/nexus-cli/releases/latest/download/nexus-linux -o nexus
-chmod +x nexus
-sudo mv nexus /usr/local/bin/
-
-# Verify installation
-nexus --version
-```
-
-**Windows**
-```powershell
-# Download from: https://github.com/adverant/nexus-cli/releases/latest/download/nexus-win.exe
-# Save to: C:\Program Files\Nexus\nexus.exe
-# Add to PATH environment variable
-```
-
-> 💡 **Direct Downloads**: Visit [Releases Page](https://github.com/adverant/nexus-cli/releases) for all versions
-
-### 🚀 NPM Installation (Recommended for Development)
+- **Time-series analytics** for optimization
 
 ```bash
-# Install globally
-npm install -g @adverant/nexus-cli
+# Real-time health monitoring
+nexus monitor --dashboard
 
-# Or use npx (no installation required)
-npx @adverant/nexus-cli --version
+# Cost analysis
+nexus analytics costs --period 30d
+# Output: Total: $47.82 | GraphRAG: $23.41 | MageAgent: $18.90 | Other: $5.51
+
+# Performance insights
+nexus analytics performance --service graphrag
 ```
 
-### 🔧 From Source (Latest Development Version)
+### &#129309; Collaboration Features
+
+Your team, synchronized.
+
+- **Real-time session sharing**: Pair program with AI assistance
+- **Shared workspaces**: Team-wide configurations
+- **Role-based access**: Control who can do what
+- **Audit logging**: Track all operations
+
+---
+
+## &#128187; Quick Start
+
+### Installation
 
 ```bash
-# Clone repository
-git clone https://github.com/adverant/nexus-cli.git
+# npm (recommended)
+npm install -g @nexus-cli/cli
+
+# yarn
+yarn global add @nexus-cli/cli
+
+# pnpm
+pnpm add -g @nexus-cli/cli
+```
+
+### First Run
+
+```bash
+# 1. Configure your API endpoint
+nexus config set services.apiUrl https://your-nexus-api.com
+
+# 2. Authenticate
+nexus auth login
+# Opens browser for OAuth, or use API key:
+nexus auth login --api-key YOUR_API_KEY
+
+# 3. Verify connection
+nexus services health
+
+# 4. Explore what's available
+nexus --help
+nexus services list
+nexus mcp tools
+```
+
+### Your First Commands
+
+```bash
+# Ask a natural language question
+nexus ask "What services are currently running?"
+
+# Check all service health
+nexus services health --all
+
+# Start an interactive session
+nexus repl
+
+# Run an autonomous agent task
+nexus agent task "Analyze authentication patterns in the codebase"
+```
+
+---
+
+## &#128218; Command Reference
+
+### Core Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus auth login` | Authenticate with Nexus API |
+| `nexus auth logout` | Clear stored credentials |
+| `nexus auth whoami` | Show current user info |
+| `nexus config set <key> <value>` | Update configuration |
+| `nexus config get <key>` | Get configuration value |
+
+### Service Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus services list` | List all discovered services |
+| `nexus services health [--all]` | Check service health |
+| `nexus services info <service>` | Get detailed service info |
+| `nexus services logs <service>` | Stream service logs |
+| `nexus services restart <service>` | Restart a service |
+
+### Agent Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus agent task <description>` | Run autonomous agent task |
+| `nexus agent orchestrate` | Multi-agent orchestration |
+| `nexus agent status <id>` | Check agent task status |
+| `nexus agent list` | List running agents |
+| `nexus agent stop <id>` | Stop running agent |
+
+### MCP Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus mcp tools` | List available MCP tools |
+| `nexus mcp run <tool> [args]` | Execute an MCP tool |
+| `nexus mcp servers` | List MCP servers |
+| `nexus mcp status` | MCP connection status |
+
+### Session Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus session save <name>` | Save current session |
+| `nexus session load <name>` | Load saved session |
+| `nexus session list` | List all saved sessions |
+| `nexus session export` | Export session to file |
+
+### Workflow Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus workflow run <file>` | Execute workflow from YAML |
+| `nexus workflow create` | Interactive workflow builder |
+| `nexus workflow list` | List saved workflows |
+| `nexus workflow status <id>` | Check workflow status |
+
+### Analytics Commands
+
+| Command | Description |
+|---------|-------------|
+| `nexus analytics costs` | View cost breakdown |
+| `nexus analytics usage` | View usage statistics |
+| `nexus analytics performance` | Performance metrics |
+
+---
+
+## &#127959; Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              NEXUS CLI                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐    │
+│   │    Commands     │  │      REPL       │  │     Plugin System       │    │
+│   │   (60+ cmds)    │  │  (Interactive)  │  │    (SDK + Hooks)        │    │
+│   └────────┬────────┘  └────────┬────────┘  └───────────┬─────────────┘    │
+│            │                    │                       │                   │
+│            └────────────────────┼───────────────────────┘                   │
+│                                 │                                           │
+│                    ┌────────────▼────────────┐                              │
+│                    │     Command Router      │                              │
+│                    │  (Discovery + Routing)  │                              │
+│                    └────────────┬────────────┘                              │
+│                                 │                                           │
+│            ┌────────────────────┼────────────────────┐                      │
+│            │                    │                    │                      │
+│     ┌──────▼──────┐     ┌───────▼───────┐    ┌──────▼──────┐               │
+│     │ HTTP Client │     │   WebSocket   │    │     MCP     │               │
+│     │  (REST API) │     │  (Streaming)  │    │   (Tools)   │               │
+│     └──────┬──────┘     └───────┬───────┘    └──────┬──────┘               │
+│            │                    │                    │                      │
+└────────────┼────────────────────┼────────────────────┼──────────────────────┘
+             │                    │                    │
+             ▼                    ▼                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        NEXUS PLATFORM SERVICES                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │
+│  │  GraphRAG   │  │  MageAgent  │  │   Gateway   │  │   32+ More...   │    │
+│  │   Memory    │  │   Agents    │  │   Routing   │  │    Services     │    │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Service Integration Flow
+
+```mermaid
+flowchart TB
+    CLI[Nexus CLI] --> Router[Command Router]
+    Router --> Discovery[Service Discovery]
+    Router --> Auth[Authentication]
+
+    Discovery --> |OpenAPI| Services[Service Registry]
+    Discovery --> |Docker| Services
+    Discovery --> |K8s| Services
+
+    Auth --> JWT[JWT Tokens]
+    Auth --> APIKey[API Keys]
+
+    Services --> GraphRAG[GraphRAG API]
+    Services --> MageAgent[MageAgent API]
+    Services --> Gateway[Nexus Gateway]
+
+    GraphRAG --> Memory[(Memory Store)]
+    GraphRAG --> Entities[(Entity Graph)]
+    GraphRAG --> Vectors[(Vector Search)]
+
+    MageAgent --> Orchestration[Task Orchestration]
+    MageAgent --> MultiAgent[Multi-Agent Mode]
+    MageAgent --> ReAct[ReAct Agent]
+
+    Gateway --> Infra[Infrastructure]
+    Gateway --> DevOps[DevOps Ops]
+    Gateway --> Analytics[Analytics]
+```
+
+---
+
+## &#9881; Configuration
+
+### Environment Variables
+
+```bash
+# Required
+NEXUS_API_URL=https://your-nexus-api.com
+
+# Authentication (choose one)
+NEXUS_API_KEY=your_api_key_here
+NEXUS_JWT_TOKEN=your_jwt_token_here
+
+# Optional
+NEXUS_OUTPUT_FORMAT=json          # json, yaml, table, text
+NEXUS_STREAMING=true              # Enable real-time streaming
+NEXUS_LOG_LEVEL=info              # debug, info, warn, error
+NEXUS_CACHE_ENABLED=true          # Enable response caching
+NEXUS_CACHE_TTL=300000            # Cache TTL in ms (5 min)
+NEXUS_REQUEST_TIMEOUT=30000       # Request timeout in ms
+NEXUS_MAX_RETRIES=3               # Max retry attempts
+```
+
+### Configuration Files
+
+**Global config**: `~/.nexus/config.toml`
+```toml
+[services]
+api_url = "https://your-nexus-api.com"
+timeout = 30000
+
+[auth]
+type = "api-key"
+api_key = "${NEXUS_API_KEY}"
+
+[output]
+format = "json"
+color = true
+streaming = true
+
+[plugins]
+directory = "~/.nexus/plugins"
+auto_update = false
+```
+
+**Workspace config**: `.nexus.toml`
+```toml
+[project]
+name = "my-project"
+default_service = "graphrag"
+
+[commands]
+# Custom command aliases
+deploy = "workflow run ./deploy.yaml"
+test = "agent task 'Run all tests and report coverage'"
+```
+
+---
+
+## &#128640; Plugin Development
+
+Create powerful extensions with the Nexus SDK.
+
+### Quick Start
+
+```bash
+# Create new plugin
+npx @nexus-cli/sdk create my-plugin
+cd my-plugin
+
+# Install dependencies
+npm install
+
+# Build and link
+npm run build
+nexus plugin install ./dist
+```
+
+### Example Plugin
+
+```typescript
+import {
+  NexusPlugin,
+  command,
+  option,
+  PluginContext
+} from '@nexus-cli/sdk';
+
+export default class AnalyticsPlugin extends NexusPlugin {
+  name = 'analytics';
+  version = '1.0.0';
+  description = 'Custom analytics commands';
+
+  @command('report', 'Generate analytics report')
+  @option('--period <days>', 'Report period in days', '30')
+  @option('--format <type>', 'Output format', 'table')
+  async generateReport(ctx: PluginContext) {
+    const { period, format } = ctx.options;
+
+    // Access Nexus services
+    const analytics = await ctx.services.get('analytics');
+    const data = await analytics.getReport({ days: parseInt(period) });
+
+    // Format and return
+    return ctx.format(data, format);
+  }
+}
+```
+
+---
+
+## &#129309; Contributing
+
+We welcome contributions! Nexus CLI is open source and community-driven.
+
+### Getting Started
+
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/nexus-cli.git
 cd nexus-cli
 
 # Install dependencies
@@ -162,385 +526,65 @@ npm install
 # Build all packages
 npm run build
 
-# Link globally
-cd packages/cli
-npm link
+# Run tests
+npm test
 
-# Verify installation
-nexus --version
-```
-
-### 🐳 Docker Container
-
-```bash
-# Pull image
-docker pull adverant/nexus-cli:latest
-
-# Run CLI
-docker run -it --rm adverant/nexus-cli:latest nexus --help
-
-# With volume mount for persistence
-docker run -it --rm \
-  -v ~/.nexus:/root/.nexus \
-  adverant/nexus-cli:latest \
-  nexus services list
-```
-
-## Quick Start
-
-```bash
-# Check CLI version
-nexus --version
-
-# Connect to Adverant-Nexus instance
-nexus config set api-url http://localhost:9092
-
-# Show all discovered services
-nexus services list
-
-# Check service health
-nexus services health --all
-
-# Store a document in GraphRAG
-nexus graphrag store-document --file report.pdf --title "Q4 Report"
-
-# Query GraphRAG
-nexus graphrag query --text "user authentication patterns"
-
-# Run multi-agent orchestration
-nexus mageagent orchestrate --task "Analyze codebase for security issues"
-
-# Execute code in sandbox
-nexus sandbox execute --code "print('Hello, Nexus!')" --language python
-
-# Start interactive REPL
-nexus repl
-
-# Run autonomous agent
-nexus agent run --task "Fix all TypeScript errors"
-```
-
-## Core Commands
-
-### Service Management
-
-```bash
-# List all services
-nexus services list
-
-# Check service status
-nexus services status
-
-# Get service info
-nexus services info graphrag
-
-# View logs
-nexus services logs graphrag --follow
-
-# Check health
-nexus services health --all
-```
-
-### GraphRAG (Document & Memory Intelligence)
-
-```bash
-# Store document
-nexus graphrag store-document --file report.pdf
-
-# Query documents
-nexus graphrag query --text "search query"
-
-# Store entity
-nexus graphrag store-entity --domain code --type class --content "User"
-
-# Create relationship
-nexus graphrag create-relationship --source id1 --target id2 --type CALLS
-```
-
-### MageAgent (Multi-Agent Orchestration)
-
-```bash
-# Orchestrate task
-nexus mageagent orchestrate --task "Complex task" --max-agents 5
-
-# Analyze input
-nexus mageagent analyze --input code.ts --focus security
-
-# Collaborate mode
-nexus mageagent collaborate --agents 3 --task "Build API"
-```
-
-### Autonomous Agent Mode
-
-```bash
-# Run autonomous task
-nexus agent run --task "Implement user authentication"
-
-# With constraints
-nexus agent run \
-  --task "Security audit" \
-  --max-iterations 20 \
-  --budget 50 \
-  --stream
-```
-
-### Workflow Automation
-
-```bash
-# Run workflow template
-nexus workflow run deploy-graphrag --version=2.1.0
-
-# Record workflow
-nexus workflow record my-workflow
-
-# Replay workflow
-nexus workflow replay my-workflow
-
-# List templates
-nexus workflow list
-```
-
-### AI-Powered Features
-
-```bash
-# Natural language commands
-nexus ask "How do I check if all services are healthy?"
-
-# Generate command from description
-nexus generate-command "store a PDF and query it"
-
-# Get intelligent suggestions
-nexus suggest  # Based on current context
-```
-
-### Session Management
-
-```bash
-# Save session
-nexus session save my-work
-
-# List sessions
-nexus session list
-
-# Resume session
-nexus session load my-work
-
-# Export/import
-nexus session export my-work > session.nsx
-nexus session import < session.nsx
-```
-
-### Monitoring & Analytics
-
-```bash
-# Start monitoring dashboard
-nexus monitor dashboard --interval=5s
-
-# Watch specific services
-nexus monitor watch graphrag mageagent
-
-# Set alerts
-nexus monitor alert --service=graphrag --metric=latency --threshold=500ms
-
-# View analytics
-nexus analytics dashboard
-
-# Generate report
-nexus analytics report --period=week --format=html
-```
-
-## Configuration
-
-### Global Configuration
-
-Located at: `~/.nexus/config.toml`
-
-```toml
-[services]
-api_url = "http://localhost:9092"
-ws_url = "ws://localhost:9093"
-timeout = 30000
-
-[auth]
-api_key = "${NEXUS_API_KEY}"
-strategy = "api-key"
-
-[defaults]
-output_format = "json"
-streaming = true
-verbose = false
-
-[plugins]
-enabled = ["my-plugin"]
-disabled = []
-```
-
-### Workspace Configuration
-
-Located at: `.nexus.toml` (project root)
-
-```toml
-[workspace]
-name = "my-project"
-type = "typescript"
-
-[agent]
-max_iterations = 20
-auto_approve_safe = true
-
-[adverant]
-auto_store = true
-memory_tags = ["project:my-project"]
-
-[[shortcuts]]
-name = "test"
-command = "sandbox execute --file tests/run.py"
-```
-
-## Plugin Development
-
-### Create a Plugin
-
-```bash
-# Initialize plugin
-nexus plugin init my-plugin --template typescript
-
-# Plugin structure:
-my-plugin/
-├── plugin.json          # Plugin manifest
-├── src/
-│   ├── index.ts        # Main entry point
-│   └── commands/       # Command implementations
-├── package.json
-└── README.md
-```
-
-### Plugin Example
-
-```typescript
-import { PluginBuilder } from '@nexus-cli/sdk';
-
-export default PluginBuilder
-  .create('my-plugin')
-  .version('1.0.0')
-  .description('My custom plugin')
-
-  .command('analyze', {
-    description: 'Analyze data',
-    args: [{ name: 'input', type: 'string', required: true }],
-    handler: async (args, context) => {
-      // Access Nexus services
-      const result = await context.services.graphrag.query({
-        text: `Analyze file: ${args.input}`
-      });
-
-      return { success: true, data: result };
-    }
-  })
-
-  .build();
-```
-
-### Install Plugin
-
-```bash
-# Install locally
-nexus plugin install ./my-plugin
-
-# Install from registry
-nexus plugin install my-plugin
-```
-
-## Architecture
-
-The CLI is built with a modular, auto-discovering architecture:
-
-```
-┌─────────────────────────────────────────────────────┐
-│              Nexus CLI                              │
-├─────────────────────────────────────────────────────┤
-│  Interactive REPL │ Scripting │ Autonomous Agent    │
-│         ↓              ↓              ↓              │
-│            Command Router (Auto-Discovery)          │
-│         ↓              ↓              ↓              │
-│  Service Commands │ MCP Tools │ Plugin Commands     │
-│         ↓              ↓              ↓              │
-│         Transport Layer (HTTP | WS | MCP)           │
-│                      ↓                               │
-│           Adverant-Nexus Microservices              │
-└─────────────────────────────────────────────────────┘
-```
-
-**Key Components:**
-- **Service Discovery**: Auto-discovers services from docker-compose and OpenAPI
-- **Command Router**: Dynamically routes commands to appropriate handlers
-- **Transport Layer**: HTTP, WebSocket, and MCP protocol support
-- **Plugin System**: Third-party extensions with full SDK
-- **Output Formatters**: Multiple output formats for different use cases
-
-See [ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) for complete details.
-
-## Development
-
-### Build
-
-```bash
-npm run build
-```
-
-### Development Mode
-
-```bash
+# Run in development
 npm run dev:cli
 ```
 
-### Testing
+### Development Guidelines
 
-```bash
-npm test
-npm run test:watch
-npm run test:coverage
-```
+- **TypeScript**: All code must be TypeScript with strict mode
+- **Testing**: Add tests for new features
+- **Commits**: Use [Conventional Commits](https://www.conventionalcommits.org/)
+- **PRs**: Include description, tests, and documentation updates
 
-### Linting
-
-```bash
-npm run lint
-npm run lint:fix
-```
-
-### Type Checking
-
-```bash
-npm run typecheck
-```
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting PRs.
-
-## Security
-
-For security vulnerabilities, please email security@adverant.ai. See [SECURITY.md](SECURITY.md) for details.
-
-## License
-
-MIT © Adverant AI
-
-See [LICENSE](LICENSE) for details.
-
-## Support
-
-- **Documentation**: [Full Documentation](https://github.com/adverant/nexus-cli/tree/main/docs)
-- **Issues**: [GitHub Issues](https://github.com/adverant/nexus-cli/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/adverant/nexus-cli/discussions)
-- **Email**: support@adverant.ai
-
-## Related Projects
-
-- [Adverant-Nexus Platform](https://github.com/adverant/adverant-nexus) - Main platform
-- [@nexus-cli/sdk](./packages/sdk) - SDK for building plugins
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
-**Made with ❤️ by Adverant AI**
+## &#128220; Documentation
+
+- [Full Documentation](https://docs.adverant.ai/nexus-cli)
+- [API Reference](https://docs.adverant.ai/nexus-cli/api)
+- [Plugin SDK Guide](https://docs.adverant.ai/nexus-cli/plugins)
+- [Configuration Guide](https://docs.adverant.ai/nexus-cli/config)
+
+---
+
+## &#128272; Security
+
+Security is a top priority. See [SECURITY.md](SECURITY.md) for:
+- Reporting vulnerabilities
+- Security best practices
+- Credential management
+
+---
+
+## &#128220; License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## &#127775; Acknowledgments
+
+Built with these amazing open source projects:
+
+- [Commander.js](https://github.com/tj/commander.js/) - CLI framework
+- [Inquirer.js](https://github.com/SBoudrias/Inquirer.js/) - Interactive prompts
+- [Chalk](https://github.com/chalk/chalk) - Terminal styling
+- [Axios](https://github.com/axios/axios) - HTTP client
+- [Zod](https://github.com/colinhacks/zod) - Schema validation
+- [MCP SDK](https://github.com/anthropics/mcp) - Model Context Protocol
+
+---
+
+<div align="center">
+
+**Built with &#10084; by [Adverant](https://adverant.ai)**
+
+[Website](https://adverant.ai) &#8226; [Documentation](https://docs.adverant.ai) &#8226; [Twitter](https://twitter.com/adverant) &#8226; [Discord](https://discord.gg/adverant)
+
+</div>

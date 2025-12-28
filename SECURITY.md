@@ -118,7 +118,7 @@ Security updates are released as:
 - **Notifications**: Sent to mailing list subscribers
 
 Subscribe to security updates:
-https://github.com/adverant/nexus-cli/security/advisories
+https://github.com/adverant/Adverant-Nexus-CLI/security/advisories
 
 ## Secure Development
 
@@ -140,8 +140,8 @@ For security concerns, contact:
 - **Response Time**: 48 hours
 
 For general questions:
-- **GitHub Discussions**: https://github.com/adverant/nexus-cli/discussions
-- **Issues**: https://github.com/adverant/nexus-cli/issues
+- **GitHub Discussions**: https://github.com/adverant/Adverant-Nexus-CLI/discussions
+- **Issues**: https://github.com/adverant/Adverant-Nexus-CLI/issues
 
 ---
 

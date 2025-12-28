@@ -29,7 +29,7 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/adverant/nexus-cli.git
+   git remote add upstream https://github.com/adverant/Adverant-Nexus-CLI.git
    ```
 
 ## Development Setup
@@ -317,9 +317,9 @@ Releases are handled by maintainers. The process is:
 
 ## Questions or Issues?
 
-- **Bugs**: [Create an issue](https://github.com/adverant/nexus-cli/issues/new?template=bug_report.md)
-- **Features**: [Create an issue](https://github.com/adverant/nexus-cli/issues/new?template=feature_request.md)
-- **Discussions**: [GitHub Discussions](https://github.com/adverant/nexus-cli/discussions)
+- **Bugs**: [Create an issue](https://github.com/adverant/Adverant-Nexus-CLI/issues/new?template=bug_report.md)
+- **Features**: [Create an issue](https://github.com/adverant/Adverant-Nexus-CLI/issues/new?template=feature_request.md)
+- **Discussions**: [GitHub Discussions](https://github.com/adverant/Adverant-Nexus-CLI/discussions)
 - **Security**: See [SECURITY.md](SECURITY.md) for vulnerability reporting
 
 ## License
