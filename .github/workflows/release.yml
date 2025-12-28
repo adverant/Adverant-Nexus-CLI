@@ -55,8 +55,20 @@ jobs:
           # Create checksums
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
 
-      - name: Publish to NPM
-        run: npm publish --workspaces
+      - name: Publish @adverant/nexus-cli-types to NPM
+        run: npm publish --workspace=@adverant/nexus-cli-types --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @adverant/nexus-cli-sdk to NPM
+        run: npm publish --workspace=@adverant/nexus-cli-sdk --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @adverant/nexus-cli to NPM
+        run: npm publish --workspace=@adverant/nexus-cli --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
@@ -76,7 +88,7 @@ jobs:
             **Download & Install (Recommended)**
             ```bash
             # Download release archive
-            curl -L https://github.com/adverant/nexus-cli/releases/download/${{ github.ref_name }}/nexus-cli-${{ github.ref_name }}.tar.gz -o nexus-cli.tar.gz
+            curl -L https://github.com/adverant/Adverant-Nexus-CLI/releases/download/${{ github.ref_name }}/nexus-cli-${{ github.ref_name }}.tar.gz -o nexus-cli.tar.gz
 
             # Extract
             tar -xzf nexus-cli.tar.gz
@@ -96,8 +108,8 @@ jobs:
 
             **From Source**
             ```bash
-            git clone https://github.com/adverant/nexus-cli.git
-            cd nexus-cli
+            git clone https://github.com/adverant/Adverant-Nexus-CLI.git
+            cd Adverant-Nexus-CLI
             npm install && npm run build
             cd packages/cli && npm link
             ```
