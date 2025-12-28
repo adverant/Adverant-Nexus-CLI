@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=@adverant-nexus/types && npm run build --workspace=@adverant-nexus/sdk && npm run build --workspace=@adverant-nexus/cli",
     "test": "npm run test --workspaces",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit --workspaces",
