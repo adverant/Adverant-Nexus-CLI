@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/adverant/nexus-cli/discussions
+    about: Ask questions, share ideas, and discuss with the community
+  - name: Documentation
+    url: https://github.com/adverant/nexus-cli#readme
+    about: Check out the documentation before opening an issue
+  - name: Security Issues
+    url: mailto:security@adverant.ai
+    about: Report security vulnerabilities privately via email
