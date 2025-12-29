@@ -27,6 +27,7 @@ import { createPluginCommand } from './commands/plugin/index.js';
 import { createAgentCommand } from './commands/agent/index.js';
 import { createSessionCommand } from './commands/session/index.js';
 import { createWorkspaceCommand } from './commands/workspace/index.js';
+import { createComputeCommand } from './commands/compute/index.js';
 
 // Load environment variables
 dotenv.config({ path: path.join(os.homedir(), '.nexus', '.env') });
@@ -132,6 +133,9 @@ function registerCommands(
 
   // Workspace commands
   program.addCommand(createWorkspaceCommand());
+
+  // Compute commands (local GPU compute)
+  program.addCommand(createComputeCommand());
 
   // TODO: Add more command groups
   // - mcp (dynamic MCP tool commands)
