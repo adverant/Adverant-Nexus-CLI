@@ -9,7 +9,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import Table from 'cli-table3';
 import { LocalComputeClient } from './lib/local-compute-client.js';
-import type { JobStatus, LocalComputeJob } from '@adverant-nexus/types';
+import type { JobStatus, LocalComputeJob } from '../../types/index.js';
 
 interface ListOptions {
   status?: string;

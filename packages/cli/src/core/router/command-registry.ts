@@ -13,7 +13,7 @@ import type {
   Command,
   CommandRegistry as ICommandRegistry,
   DynamicCommandSource,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';
 
 /**
  * Command Registry Implementation

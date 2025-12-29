@@ -4,7 +4,7 @@
  * Commands for code execution in sandbox environment
  */
 
-import type { Command, CommandHandler } from '@adverant-nexus/types';
+import type { Command, CommandHandler } from '../../types/index.js';
 import { HTTPClient } from '../../core/transport/http-client.js';
 
 export const executeHandler: CommandHandler = async (args, context) => {

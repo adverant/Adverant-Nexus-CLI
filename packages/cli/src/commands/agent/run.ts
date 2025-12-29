@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import type { AgentTask, AgentStatus } from '@adverant-nexus/types';
+import type { AgentTask, AgentStatus } from '../../types/index.js';
 
 export function createAgentRunCommand(): Command {
   const command = new Command('run');

@@ -4,7 +4,7 @@
  * Provides intelligent tab completion for commands, options, and arguments
  */
 
-import type { Command } from '@adverant-nexus/types';
+import type { Command } from '../types/index.js';
 import type { REPLContext } from '../session/context-manager.js';
 
 export interface CompletionResult {

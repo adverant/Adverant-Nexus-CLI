@@ -12,7 +12,7 @@ import type {
   JobStatus,
   JobResources,
   MLFramework,
-} from '@adverant-nexus/types';
+} from '../../../types/index.js';
 
 export interface LocalComputeClientConfig {
   port?: number;

@@ -23,4 +23,4 @@ export type {
   TransportError,
   RequestMetrics,
   RetryConfig,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';

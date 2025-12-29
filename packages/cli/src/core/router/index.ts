@@ -52,4 +52,4 @@ export type {
   OptionDefinition,
   ArgumentType,
   WorkspaceInfo,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';

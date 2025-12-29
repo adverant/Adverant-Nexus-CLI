@@ -46,10 +46,6 @@ jobs:
 
       - name: List built packages
         run: |
-          echo "Types dist:"
-          ls -la packages/types/dist/ || echo "types not built"
-          echo "SDK dist:"
-          ls -la packages/sdk/dist/ || echo "sdk not built"
           echo "CLI dist:"
           ls -la packages/cli/dist/ || echo "cli not built"
 
@@ -77,20 +73,6 @@ jobs:
 
           # Create checksums
           sha256sum nexus-cli-${{ github.ref_name }}.tar.gz > nexus-cli-${{ github.ref_name }}.tar.gz.sha256
-
-      - name: Publish @adverant-nexus/types to NPM (OIDC)
-        working-directory: packages/types
-        run: |
-          echo "Publishing @adverant-nexus/types with OIDC trusted publishing..."
-          npm publish --access public --provenance || echo "types publish failed - may need trusted publisher setup"
-        continue-on-error: true
-
-      - name: Publish @adverant-nexus/sdk to NPM (OIDC)
-        working-directory: packages/sdk
-        run: |
-          echo "Publishing @adverant-nexus/sdk with OIDC trusted publishing..."
-          npm publish --access public --provenance || echo "sdk publish failed - may need trusted publisher setup"
-        continue-on-error: true
 
       - name: Publish @adverant-nexus/cli to NPM (OIDC)
         working-directory: packages/cli

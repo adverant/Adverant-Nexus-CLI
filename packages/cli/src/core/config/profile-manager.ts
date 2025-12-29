@@ -9,7 +9,7 @@
  */
 
 import * as fs from 'fs-extra';
-import type { Profile, NexusConfig } from '@adverant-nexus/types';
+import type { Profile, NexusConfig } from '../../types/index.js';
 import { ConfigManager, ConfigurationError } from './config-manager.js';
 
 export class ProfileManager {

@@ -15,7 +15,7 @@ import type {
   SessionContext,
   HistoryEntry,
   SessionResult,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';
 
 const SESSIONS_DIR = path.join(os.homedir(), '.nexus', 'sessions');
 

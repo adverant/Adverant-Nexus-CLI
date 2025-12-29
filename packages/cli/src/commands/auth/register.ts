@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { AuthCredentials } from '@adverant-nexus/types';
+import type { AuthCredentials } from '../../types/index.js';
 
 /**
  * Password strength validator

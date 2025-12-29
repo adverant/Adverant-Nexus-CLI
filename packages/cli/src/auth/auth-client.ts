@@ -18,7 +18,7 @@ import type {
   CreateAPIKeyResponse,
   WhoAmIResponse,
   AuthError,
-} from '@adverant-nexus/types';
+} from '../types/index.js';
 
 export interface AuthClientConfig {
   baseURL: string;

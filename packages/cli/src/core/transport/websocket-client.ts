@@ -17,7 +17,7 @@ import type {
   WSOptions,
   WSEventHandler,
   TransportError,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';
 
 interface BufferedMessage {
   event: string;

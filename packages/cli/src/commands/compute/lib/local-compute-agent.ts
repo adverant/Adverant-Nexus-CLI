@@ -31,7 +31,7 @@ import type {
   ExecuteRequest,
   ExecuteResult,
   ExecutionOutput,
-} from '@adverant-nexus/types';
+} from '../../../types/index.js';
 
 /**
  * Path to agent PID file

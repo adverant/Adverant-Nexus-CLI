@@ -7,7 +7,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import type { HistoryEntry, HistoryManager as IHistoryManager } from '@adverant-nexus/types';
+import type { HistoryEntry, HistoryManager as IHistoryManager } from '../../types/index.js';
 import { randomUUID } from 'crypto';
 
 const HISTORY_FILE = path.join(os.homedir(), '.nexus', 'history');

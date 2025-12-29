@@ -7,8 +7,8 @@
 
 import ora from 'ora';
 import chalk from 'chalk';
-import type { Command } from '@adverant-nexus/types';
-import type { MCPToolDefinition } from '@adverant-nexus/types';
+import type { Command } from '../../types/index.js';
+import type { MCPToolDefinition } from '../../types/index.js';
 import { MCPClient } from '../../core/transport/mcp-client.js';
 import { MCPToolMapper, createMCPToolMapper } from './mcp-tool-mapper.js';
 

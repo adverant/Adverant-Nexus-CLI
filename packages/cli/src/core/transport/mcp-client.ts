@@ -17,7 +17,7 @@ import type {
   MCPConfig,
   MCPTool,
   TransportError,
-} from '@adverant-nexus/types';
+} from '../../types/index.js';
 
 /**
  * Connection state machine for MCP client

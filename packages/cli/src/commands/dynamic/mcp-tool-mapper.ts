@@ -5,8 +5,8 @@
  * Parses tool schemas and generates command structures
  */
 
-import type { Command, ArgumentDefinition, OptionDefinition } from '@adverant-nexus/types';
-import type { MCPToolDefinition, MCPToolCategory } from '@adverant-nexus/types';
+import type { Command, ArgumentDefinition, OptionDefinition } from '../../types/index.js';
+import type { MCPToolDefinition, MCPToolCategory } from '../../types/index.js';
 
 export interface MCPToolMapping {
   tool: MCPToolDefinition;

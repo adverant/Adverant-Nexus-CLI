@@ -8,7 +8,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { SessionStorage } from '../../core/session/session-storage.js';
 import { SessionManager } from '../../core/session/session-manager.js';
-import type { Session } from '@adverant-nexus/types';
+import type { Session } from '../../types/index.js';
 
 export function createSessionResumeCommand(): Command {
   const command = new Command('resume')

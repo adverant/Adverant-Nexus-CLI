@@ -10,7 +10,7 @@ import ora from 'ora';
 import fs from 'fs/promises';
 import path from 'path';
 import { LocalComputeClient } from './lib/local-compute-client.js';
-import type { MLFramework } from '@adverant-nexus/types';
+import type { MLFramework } from '../../types/index.js';
 
 interface SubmitOptions {
   name?: string;

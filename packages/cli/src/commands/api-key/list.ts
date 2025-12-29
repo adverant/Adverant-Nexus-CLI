@@ -10,7 +10,7 @@ import ora from 'ora';
 import Table from 'cli-table3';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { APIKey } from '@adverant-nexus/types';
+import type { APIKey } from '../../types/index.js';
 
 export function createListAPIKeysCommand(
   authClient: AuthClient,

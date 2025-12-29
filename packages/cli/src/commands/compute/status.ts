@@ -8,7 +8,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { LocalComputeClient } from './lib/local-compute-client.js';
-import type { LocalComputeJob, ComputeAgentStatus } from '@adverant-nexus/types';
+import type { LocalComputeJob, ComputeAgentStatus } from '../../types/index.js';
 
 export function createComputeStatusCommand(): Command {
   return new Command('status')

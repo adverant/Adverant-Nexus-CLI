@@ -12,9 +12,9 @@ import type {
   ServiceMetadata,
   ServiceHealth,
   ServiceCommand
-} from '@adverant-nexus/types';
-import { ServiceStatus } from '@adverant-nexus/types';
-import type { Plugin } from '@adverant-nexus/types';
+} from '../../types/index.js';
+import { ServiceStatus } from '../../types/index.js';
+import type { Plugin } from '../../types/index.js';
 import {
   parseMultipleComposeFiles,
   filterApplicationServices

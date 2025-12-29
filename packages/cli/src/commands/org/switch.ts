@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { AuthClient } from '../../auth/auth-client.js';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
-import type { Organization } from '@adverant-nexus/types';
+import type { Organization } from '../../types/index.js';
 
 export function createSwitchOrganizationCommand(
   authClient: AuthClient,

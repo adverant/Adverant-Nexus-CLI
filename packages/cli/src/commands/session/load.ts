@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { SessionStorage } from '../../core/session/session-storage.js';
-import type { Session } from '@adverant-nexus/types';
+import type { Session } from '../../types/index.js';
 
 export function createSessionLoadCommand(): Command {
   const command = new Command('load')

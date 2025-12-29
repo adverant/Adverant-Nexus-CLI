@@ -6,7 +6,7 @@
  */
 
 import axios from 'axios';
-import type { ServiceCommand, CommandParameter } from '@adverant-nexus/types';
+import type { ServiceCommand, CommandParameter } from '../../types/index.js';
 
 /**
  * MCP Tool Definition
