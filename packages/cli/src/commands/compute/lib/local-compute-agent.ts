@@ -6,7 +6,6 @@
  */
 
 import { spawn, ChildProcess } from 'child_process';
-import { io, Socket } from 'socket.io-client';
 import express, { Express, Request, Response } from 'express';
 import { Server } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -43,7 +42,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
   private config: LocalComputeConfig;
   private hardware: HardwareInfo | null = null;
   private agentId: string | null = null;
-  private gatewaySocket: Socket | null = null;
+  private gatewayConnected: boolean = false;
   private localServer: Server | null = null;
   private localApp: Express | null = null;
   private localIO: SocketIOServer | null = null;
@@ -161,11 +160,18 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
       this.reconnectTimer = null;
     }
 
-    // Disconnect from gateway
-    if (this.gatewaySocket) {
-      this.gatewaySocket.emit('agent:disconnect', { agentId: this.agentId });
-      this.gatewaySocket.disconnect();
-      this.gatewaySocket = null;
+    // Disconnect from gateway via REST API
+    if (this.gatewayConnected && this.agentId) {
+      try {
+        await fetch(`${this.config.gatewayUrl}/api/local-compute/disconnect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: this.agentId }),
+        });
+      } catch {
+        // Ignore disconnect errors on shutdown
+      }
+      this.gatewayConnected = false;
     }
 
     // Stop local server
@@ -673,100 +679,80 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
   }
 
   /**
-   * Connect to HPC Gateway
+   * Connect to HPC Gateway via REST API
    */
   private async connectToGateway(): Promise<void> {
     if (!this.hardware) {
       throw new Error('Hardware not detected');
     }
 
-    const wsUrl = this.config.gatewayUrl
-      .replace('http://', 'ws://')
-      .replace('https://', 'wss://');
+    // Build registration payload
+    const capabilities: AgentRegistration['capabilities'] = {
+      gpuType: this.hardware.gpu?.type || 'none',
+      gpuMemory: this.hardware.gpu?.memory || 0,
+      cpuCores: this.hardware.cpu.cores,
+      ramTotal: this.hardware.memory.total,
+      frameworks: this.hardware.frameworks
+        .filter((f) => f.available)
+        .map((f) => f.name.toLowerCase()),
+    };
+    if (this.hardware.gpu?.api === 'Metal 3') capabilities.metalVersion = 3;
+    if (this.hardware.gpu?.computeCapability) capabilities.computeCapability = this.hardware.gpu.computeCapability;
+    if (this.hardware.gpu?.neuralEngine !== undefined) capabilities.neuralEngine = this.hardware.gpu.neuralEngine;
+    if (this.hardware.gpu?.neuralEngineTops !== undefined) capabilities.neuralEngineTops = this.hardware.gpu.neuralEngineTops;
 
-    return new Promise((resolve) => {
-      this.gatewaySocket = io(wsUrl, {
-        transports: ['websocket'],
-        reconnection: false,
-        timeout: 10000,
+    const registration: AgentRegistration = {
+      type: 'local-compute',
+      name: this.config.name,
+      hostname: os.hostname(),
+      capabilities,
+      config: {
+        maxMemoryPercent: this.config.maxMemoryPercent,
+        allowRemoteJobs: this.config.allowRemoteJobs,
+        idleTimeoutMinutes: this.config.idleTimeoutMinutes,
+      },
+    };
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.config.gatewayUrl}/api/local-compute/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registration),
+        signal: controller.signal,
       });
 
-      const timeout = setTimeout(() => {
-        console.log('Gateway connection timeout - running in standalone mode');
-        resolve();
-      }, 10000);
+      clearTimeout(timeout);
 
-      this.gatewaySocket.on('connect', () => {
-        clearTimeout(timeout);
+      if (response.ok) {
+        const data = await response.json() as { agentId: string; heartbeatInterval?: number };
+        this.agentId = data.agentId;
+        this.gatewayConnected = true;
         this.reconnectAttempts = 0;
         console.log('Connected to HPC Gateway');
-
-        // Register with gateway
-        const capabilities: AgentRegistration['capabilities'] = {
-          gpuType: this.hardware!.gpu?.type || 'none',
-          gpuMemory: this.hardware!.gpu?.memory || 0,
-          cpuCores: this.hardware!.cpu.cores,
-          ramTotal: this.hardware!.memory.total,
-          frameworks: this.hardware!.frameworks
-            .filter((f) => f.available)
-            .map((f) => f.name.toLowerCase()),
-        };
-        if (this.hardware!.gpu?.api === 'Metal 3') capabilities.metalVersion = 3;
-        if (this.hardware!.gpu?.computeCapability) capabilities.computeCapability = this.hardware!.gpu.computeCapability;
-        if (this.hardware!.gpu?.neuralEngine !== undefined) capabilities.neuralEngine = this.hardware!.gpu.neuralEngine;
-        if (this.hardware!.gpu?.neuralEngineTops !== undefined) capabilities.neuralEngineTops = this.hardware!.gpu.neuralEngineTops;
-
-        const registration: AgentRegistration = {
-          type: 'local-compute',
-          name: this.config.name,
-          hostname: os.hostname(),
-          capabilities,
-          config: {
-            maxMemoryPercent: this.config.maxMemoryPercent,
-            allowRemoteJobs: this.config.allowRemoteJobs,
-            idleTimeoutMinutes: this.config.idleTimeoutMinutes,
-          },
-        };
-
-        this.gatewaySocket!.emit('agent:register', registration);
-        resolve();
-      });
-
-      this.gatewaySocket.on('connect_error', (error) => {
-        clearTimeout(timeout);
-        console.log(`Gateway connection failed: ${error.message} - running in standalone mode`);
+        console.log(`  Agent ID: ${this.agentId}`);
+      } else {
+        const error = await response.json().catch(() => ({ error: response.statusText })) as { error?: string };
+        console.log(`Gateway registration failed: ${error.error || response.statusText} - running in standalone mode`);
         this.emit('error', {
-          code: 'CONNECTION_ERROR',
-          message: error.message,
+          code: 'REGISTRATION_FAILED',
+          message: error.error || response.statusText,
         });
-        resolve(); // Don't fail, just run standalone
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('abort')) {
+        console.log('Gateway connection timeout - running in standalone mode');
+      } else {
+        console.log(`Gateway connection failed: ${message} - running in standalone mode`);
+      }
+      this.emit('error', {
+        code: 'CONNECTION_ERROR',
+        message,
       });
-
-      this.gatewaySocket.on('disconnect', (reason) => {
-        this.emit('disconnected', { reason });
-        if (this.running && reason !== 'io client disconnect') {
-          this.scheduleReconnect();
-        }
-      });
-
-      // Handle remote job assignment (if allowRemoteJobs is true)
-      this.gatewaySocket.on('job:assign', async (data) => {
-        if (this.config.allowRemoteJobs) {
-          try {
-            const job = await this.submitJob(data);
-            this.gatewaySocket!.emit('job:accepted', { jobId: job.id });
-          } catch (error) {
-            this.gatewaySocket!.emit('job:rejected', {
-              error: error instanceof Error ? error.message : String(error),
-            });
-          }
-        } else {
-          this.gatewaySocket!.emit('job:rejected', {
-            error: 'Remote jobs not allowed',
-          });
-        }
-      });
-    });
+    }
   }
 
   /**
@@ -791,29 +777,55 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
     this.reconnectAttempts++;
     this.emit('reconnecting', { attempt: this.reconnectAttempts, delay });
 
-    this.reconnectTimer = setTimeout(() => {
-      this.connectToGateway().catch(() => {
-        // Error handled in connect
-      });
+    this.reconnectTimer = setTimeout(async () => {
+      try {
+        await this.connectToGateway();
+      } catch {
+        // Error handled in connect, schedule next attempt
+        if (this.running && !this.gatewayConnected) {
+          this.scheduleReconnect();
+        }
+      }
     }, delay);
   }
 
   /**
-   * Start heartbeat to gateway
+   * Start heartbeat to gateway via REST API
    */
   private startHeartbeat(): void {
-    this.heartbeatTimer = setInterval(() => {
-      if (this.gatewaySocket?.connected) {
-        this.gatewaySocket.emit('agent:heartbeat', {
-          agentId: this.agentId,
-          status: this.currentJob ? 'busy' : 'idle',
-          currentJobId: this.currentJob?.job.id,
-          jobsCompleted: this.jobsCompleted,
-          jobsFailed: this.jobsFailed,
-        });
-        this.emit('heartbeat', { timestamp: new Date() });
+    this.heartbeatTimer = setInterval(async () => {
+      if (this.gatewayConnected && this.agentId) {
+        try {
+          const response = await fetch(`${this.config.gatewayUrl}/api/local-compute/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              agentId: this.agentId,
+              status: this.currentJob ? 'busy' : 'idle',
+              currentJob: this.currentJob ? {
+                id: this.currentJob.job.id,
+                name: this.currentJob.job.name,
+              } : null,
+            }),
+          });
+
+          if (response.ok) {
+            this.emit('heartbeat', { timestamp: new Date() });
+          } else if (response.status === 404) {
+            // Agent was removed from gateway, try to re-register
+            console.log('Agent not found on gateway, re-registering...');
+            this.gatewayConnected = false;
+            this.scheduleReconnect();
+          }
+        } catch (error) {
+          // Heartbeat failed, will retry on next interval
+          const message = error instanceof Error ? error.message : String(error);
+          if (this.running) {
+            console.log(`Heartbeat failed: ${message}`);
+          }
+        }
       }
-    }, 30000);
+    }, 15000); // Send heartbeat every 15 seconds
   }
 
   /**
@@ -977,14 +989,18 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
         this.completedJobs.set(job.id, job);
         this.currentJob = null;
 
-        // Report to gateway
-        if (this.gatewaySocket?.connected) {
-          this.gatewaySocket.emit('job:complete', {
-            agentId: this.agentId,
-            jobId: job.id,
-            status: job.status,
-            exitCode: job.exitCode,
-            metrics,
+        // Report to gateway (fire and forget)
+        if (this.gatewayConnected && this.agentId) {
+          fetch(`${this.config.gatewayUrl}/api/local-compute/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              agentId: this.agentId,
+              status: 'idle',
+              currentJob: null,
+            }),
+          }).catch(() => {
+            // Ignore heartbeat errors
           });
         }
 
