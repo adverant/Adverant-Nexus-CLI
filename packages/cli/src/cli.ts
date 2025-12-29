@@ -9,6 +9,15 @@ import chalk from 'chalk';
 import dotenv from 'dotenv';
 import path from 'path';
 import os from 'os';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Get package version dynamically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const packageJsonPath = path.resolve(__dirname, '../package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+const CLI_VERSION = packageJson.version;
 
 // Core systems
 import { ConfigManager } from './core/config/config-manager.js';
@@ -155,7 +164,7 @@ export async function runCLI(): Promise<void> {
   program
     .name('nexus')
     .description('World-class CLI for the Adverant-Nexus platform')
-    .version('3.0.0', '-v, --version', 'Display version number')
+    .version(CLI_VERSION, '-v, --version', 'Display version number')
     .helpOption('-h, --help', 'Display help information');
 
   // Global options
@@ -178,7 +187,7 @@ export async function runCLI(): Promise<void> {
     .description('Show Nexus CLI version with banner')
     .action(() => {
       const { displayBanner } = require('./utils/banner.js');
-      displayBanner('3.0.0', {
+      displayBanner(CLI_VERSION, {
         variant: 'standard',
         theme: 'hexagon',
         colored: true,

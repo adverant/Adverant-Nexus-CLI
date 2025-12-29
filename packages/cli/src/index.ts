@@ -8,6 +8,16 @@
 import { runCLI } from './cli.js';
 import { displayBanner } from './utils/banner.js';
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get package version dynamically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const packageJsonPath = path.resolve(__dirname, '../package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+const CLI_VERSION = packageJson.version;
 
 // Display banner on startup (minimal variant)
 const showBanner = !process.argv.includes('--no-banner') && process.stdout.isTTY;
@@ -16,7 +26,7 @@ async function main(): Promise<void> {
   try {
     // Show banner for interactive terminals
     if (showBanner) {
-      displayBanner('3.0.0', {
+      displayBanner(CLI_VERSION, {
         variant: 'minimal',
         theme: 'hexagon',
         colored: true,
