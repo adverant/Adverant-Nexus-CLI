@@ -15,6 +15,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { detectHardware, type HardwareInfo } from './hardware-detection.js';
+import { CredentialsManager } from '../../../auth/credentials-manager.js';
 import type {
   LocalComputeConfig,
   AgentRegistration,
@@ -46,6 +47,9 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
   private localServer: Server | null = null;
   private localApp: Express | null = null;
   private localIO: SocketIOServer | null = null;
+  private credentialsManager: CredentialsManager;
+  private accessToken: string | null = null;
+  private userId: string | null = null;
 
   private jobQueue: QueuedJob[] = [];
   private currentJob: JobProcess | null = null;
@@ -76,11 +80,13 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
       gatewayUrl: config.gatewayUrl || 'https://api.adverant.ai/hpc',
       maxMemoryPercent: config.maxMemoryPercent ?? 75,
       allowRemoteJobs: config.allowRemoteJobs ?? false,
-      idleTimeoutMinutes: config.idleTimeoutMinutes ?? 30,
+      idleTimeoutMinutes: config.idleTimeoutMinutes ?? 0, // 0 = never timeout
       apiPort: config.apiPort ?? 9200,
       reconnectInterval: config.reconnectInterval ?? 5000,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 10,
     };
+
+    this.credentialsManager = new CredentialsManager();
   }
 
   /**
@@ -100,6 +106,9 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
         'Another compute agent is already running. Stop it first with: nexus compute agent stop'
       );
     }
+
+    // Load authentication credentials
+    await this.loadCredentials();
 
     // Detect hardware
     this.hardware = await detectHardware();
@@ -165,7 +174,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
       try {
         await fetch(`${this.config.gatewayUrl}/api/local-compute/disconnect`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getAuthHeaders(),
           body: JSON.stringify({ agentId: this.agentId }),
         });
       } catch {
@@ -679,6 +688,40 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
   }
 
   /**
+   * Load authentication credentials from storage
+   */
+  private async loadCredentials(): Promise<void> {
+    try {
+      const credentials = await this.credentialsManager.loadCredentials();
+      if (credentials && !this.credentialsManager.isExpired(credentials)) {
+        this.accessToken = credentials.access_token;
+        this.userId = credentials.user_id;
+      }
+    } catch (error) {
+      // Non-fatal - agent can run in standalone mode without auth
+    }
+  }
+
+  /**
+   * Get authentication headers for API requests
+   */
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+
+    if (this.userId) {
+      headers['X-User-ID'] = this.userId;
+    }
+
+    return headers;
+  }
+
+  /**
    * Connect to HPC Gateway via REST API
    */
   private async connectToGateway(): Promise<void> {
@@ -719,7 +762,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
 
       const response = await fetch(`${this.config.gatewayUrl}/api/local-compute/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(registration),
         signal: controller.signal,
       });
@@ -798,7 +841,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
         try {
           const response = await fetch(`${this.config.gatewayUrl}/api/local-compute/heartbeat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify({
               agentId: this.agentId,
               status: this.currentJob ? 'busy' : 'idle',
@@ -993,7 +1036,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
         if (this.gatewayConnected && this.agentId) {
           fetch(`${this.config.gatewayUrl}/api/local-compute/heartbeat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify({
               agentId: this.agentId,
               status: 'idle',

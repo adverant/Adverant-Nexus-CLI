@@ -61,7 +61,7 @@ export interface LocalComputeConfig {
   maxMemoryPercent: number;
   /** Whether to accept remote jobs */
   allowRemoteJobs: boolean;
-  /** Idle timeout in minutes before auto-shutdown */
+  /** Idle timeout in minutes before auto-shutdown (0 = never timeout) */
   idleTimeoutMinutes: number;
   /** Port for local API server */
   apiPort: number;
@@ -79,7 +79,7 @@ export const DEFAULT_COMPUTE_CONFIG: LocalComputeConfig = {
   gatewayUrl: 'https://api.adverant.ai/hpc',
   maxMemoryPercent: 75,
   allowRemoteJobs: false,
-  idleTimeoutMinutes: 30,
+  idleTimeoutMinutes: 0, // 0 = never timeout, runs until explicitly stopped
   apiPort: 9200,
   reconnectInterval: 5000,
   maxReconnectAttempts: 10,
