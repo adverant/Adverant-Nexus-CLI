@@ -529,6 +529,25 @@ export interface SystemMetrics {
   gpuPercent?: number;
   gpuMemoryPercent?: number;
   temperature?: number;
+  thermalState?: string;  // Nominal, Fair, Serious, Critical
+
+  // Extended metrics from powermetrics daemon
+  power?: {
+    cpu?: number;      // CPU power in mW
+    gpu?: number;      // GPU power in mW
+    ane?: number;      // Apple Neural Engine power in mW
+    combined?: number; // Total power in mW
+  };
+  gpuFrequencyMHz?: number;  // Current GPU frequency
+  cpuClusters?: {
+    eClusterFreqMHz?: number;   // Efficiency cluster frequency
+    eClusterActive?: number;    // E-cluster utilization %
+    pClusterFreqMHz?: number;   // Performance cluster frequency
+    pClusterActive?: number;    // P-cluster utilization %
+  };
+  battery?: {
+    percentCharge?: number;     // 0-100
+  };
 }
 
 /**
@@ -555,6 +574,50 @@ export async function collectSystemMetrics(): Promise<SystemMetrics> {
   }
   if (gpuMetrics.temperature !== undefined) {
     metrics.temperature = gpuMetrics.temperature;
+  }
+
+  // Get extended metrics from daemon (if available)
+  const daemonData = readTemperatureFromDaemon();
+  if (daemonData) {
+    // Thermal state
+    if (daemonData.thermalState) {
+      metrics.thermalState = daemonData.thermalState;
+    }
+
+    // Power consumption
+    if (daemonData.power) {
+      metrics.power = daemonData.power;
+    }
+
+    // GPU frequency
+    if (daemonData.gpuMetrics?.activeFrequencyMHz) {
+      metrics.gpuFrequencyMHz = daemonData.gpuMetrics.activeFrequencyMHz;
+    }
+
+    // CPU cluster metrics
+    if (daemonData.cpuMetrics) {
+      const clusters: SystemMetrics['cpuClusters'] = {};
+      if (daemonData.cpuMetrics.eClusterFreqMHz !== undefined) {
+        clusters.eClusterFreqMHz = daemonData.cpuMetrics.eClusterFreqMHz;
+      }
+      if (daemonData.cpuMetrics.eClusterActive !== undefined) {
+        clusters.eClusterActive = daemonData.cpuMetrics.eClusterActive;
+      }
+      if (daemonData.cpuMetrics.pClusterFreqMHz !== undefined) {
+        clusters.pClusterFreqMHz = daemonData.cpuMetrics.pClusterFreqMHz;
+      }
+      if (daemonData.cpuMetrics.pClusterActive !== undefined) {
+        clusters.pClusterActive = daemonData.cpuMetrics.pClusterActive;
+      }
+      if (Object.keys(clusters).length > 0) {
+        metrics.cpuClusters = clusters;
+      }
+    }
+
+    // Battery
+    if (daemonData.battery) {
+      metrics.battery = daemonData.battery;
+    }
   }
 
   return metrics;
@@ -707,14 +770,23 @@ async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMe
     }
   }
 
-  // Try to get temperature from the daemon first (requires one-time sudo install)
+  // Try to get metrics from the daemon first (requires one-time sudo install)
   // The daemon uses powermetrics which gives accurate readings on Apple Silicon
-  const daemonTemp = readTemperatureFromDaemon();
-  if (daemonTemp) {
-    // Prefer CPU temp, fall back to SoC temp
-    const temp = daemonTemp.cpu ?? daemonTemp.soc ?? daemonTemp.gpu;
+  const daemonData = readTemperatureFromDaemon();
+  if (daemonData) {
+    // Use GPU active residency from daemon (much more accurate than ioreg)
+    if (daemonData.gpuMetrics?.activeResidency !== undefined) {
+      result.gpuPercent = Math.round(daemonData.gpuMetrics.activeResidency * 10) / 10;
+    }
+
+    // Get temperature
+    const temp = daemonData.cpu ?? daemonData.soc ?? daemonData.gpu;
     if (temp !== undefined && temp > 20 && temp < 110) {
       result.temperature = temp;
+    }
+
+    // If we got GPU data from daemon, return early (it's more accurate)
+    if (result.gpuPercent !== undefined) {
       return result;
     }
   }
