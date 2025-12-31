@@ -110,30 +110,57 @@ write_temperature() {
   local cpu_temp=""
   local gpu_temp=""
   local soc_temp=""
+  local thermal_state=""
   local error=""
 
-  # Try powermetrics for Apple Silicon (most accurate)
+  # Try powermetrics with thermal sampler first (works on M4)
   if command -v powermetrics &> /dev/null; then
-    # Run powermetrics for 1 sample, extract thermal data
     local pm_output
+
+    # Try thermal sampler (shows thermal pressure state)
+    pm_output=$(powermetrics --samplers thermal -i 1 -n 1 2>/dev/null || true)
+
+    # Check for thermal level (Nominal, Fair, Serious, Critical)
+    local thermal_level
+    thermal_level=$(echo "$pm_output" | grep -i "Thermal level" | head -1 | awk '{print $NF}')
+    if [ -n "$thermal_level" ]; then
+      thermal_state="$thermal_level"
+      # Convert thermal level to approximate temperature
+      case "$thermal_level" in
+        "Nominal") soc_temp="45" ;;  # Estimated
+        "Fair") soc_temp="65" ;;
+        "Serious") soc_temp="80" ;;
+        "Critical") soc_temp="95" ;;
+      esac
+    fi
+
+    # Also try SMC sampler (works on M1/M2/M3)
     pm_output=$(powermetrics --samplers smc -i 1 -n 1 2>/dev/null || true)
 
-    # Extract CPU die temperature
-    cpu_temp=$(echo "$pm_output" | grep -i "CPU die temperature" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    # Extract CPU die temperature (older Apple Silicon)
+    local temp_val
+    temp_val=$(echo "$pm_output" | grep -i "CPU die temperature" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    if [ -n "$temp_val" ]; then
+      cpu_temp="$temp_val"
+    fi
 
     # Extract GPU die temperature (if available)
-    gpu_temp=$(echo "$pm_output" | grep -i "GPU die temperature" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    temp_val=$(echo "$pm_output" | grep -i "GPU die temperature" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    if [ -n "$temp_val" ]; then
+      gpu_temp="$temp_val"
+    fi
 
     # Extract SOC temperature (Apple Silicon)
-    soc_temp=$(echo "$pm_output" | grep -i "SOC MTR Temp" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    temp_val=$(echo "$pm_output" | grep -i "SOC MTR Temp" | head -1 | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+    if [ -n "$temp_val" ]; then
+      soc_temp="$temp_val"
+    fi
 
-    # If no specific temps found, try generic thermal pressure
+    # Try to find any temperature reading
     if [ -z "$cpu_temp" ] && [ -z "$soc_temp" ]; then
-      # Fallback: try to get any temperature reading
-      local any_temp
-      any_temp=$(echo "$pm_output" | grep -iE "temperature|thermal" | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
-      if [ -n "$any_temp" ]; then
-        cpu_temp="$any_temp"
+      temp_val=$(echo "$pm_output" | grep -iE "temperature|Die Temp" | grep -oE '[0-9]+\\.?[0-9]*' | head -1)
+      if [ -n "$temp_val" ] && [ "$temp_val" != "0" ]; then
+        cpu_temp="$temp_val"
       fi
     fi
   fi
@@ -154,8 +181,12 @@ write_temperature() {
     json+=",\\"soc\\":$soc_temp"
   fi
 
+  if [ -n "$thermal_state" ]; then
+    json+=",\\"thermalState\\":\\"$thermal_state\\""
+  fi
+
   if [ -z "$cpu_temp" ] && [ -z "$gpu_temp" ] && [ -z "$soc_temp" ]; then
-    json+=",\\"error\\":\\"No temperature sensors found\\""
+    json+=",\\"error\\":\\"No temperature sensors found - M4 chips provide thermal state only\\""
   fi
 
   json+="}"
