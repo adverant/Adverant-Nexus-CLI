@@ -12,6 +12,7 @@ import { createComputeStatusCommand } from './status.js';
 import { createComputeSubmitCommand } from './submit.js';
 import { createComputeListCommand } from './list.js';
 import { createComputeLogsCommand } from './logs.js';
+import { createTemperatureCommand } from './temperature.js';
 
 export function createComputeCommand(): Command {
   const command = new Command('compute')
@@ -24,6 +25,7 @@ export function createComputeCommand(): Command {
   command.addCommand(createComputeSubmitCommand());
   command.addCommand(createComputeListCommand());
   command.addCommand(createComputeLogsCommand());
+  command.addCommand(createTemperatureCommand());
 
   return command;
 }

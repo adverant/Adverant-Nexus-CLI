@@ -10,6 +10,7 @@
 
 import os from 'os';
 import { execSync } from 'child_process';
+import { readTemperatureFromDaemon } from './temperature-daemon.js';
 
 export interface HardwareInfo {
   platform: string;
@@ -648,7 +649,7 @@ async function getGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?
 }
 
 /**
- * Get Apple Silicon GPU metrics using ioreg and osx-cpu-temp
+ * Get Apple Silicon GPU metrics using ioreg and temperature daemon
  */
 async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number }> {
   const result: { gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number } = {};
@@ -706,7 +707,19 @@ async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMe
     }
   }
 
-  // Try to get temperature using osx-cpu-temp (if installed via brew)
+  // Try to get temperature from the daemon first (requires one-time sudo install)
+  // The daemon uses powermetrics which gives accurate readings on Apple Silicon
+  const daemonTemp = readTemperatureFromDaemon();
+  if (daemonTemp) {
+    // Prefer CPU temp, fall back to SoC temp
+    const temp = daemonTemp.cpu ?? daemonTemp.soc ?? daemonTemp.gpu;
+    if (temp !== undefined && temp > 20 && temp < 110) {
+      result.temperature = temp;
+      return result;
+    }
+  }
+
+  // Fallback: Try osx-cpu-temp (if installed via brew)
   // Note: osx-cpu-temp returns 0.0°C on Apple Silicon M4, so we need to validate
   try {
     const tempOutput = execSync('osx-cpu-temp 2>/dev/null', {
