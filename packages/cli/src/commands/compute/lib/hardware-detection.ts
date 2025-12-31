@@ -519,4 +519,216 @@ async function detectFrameworks(): Promise<FrameworkInfo[]> {
   return frameworks;
 }
 
+/**
+ * Real-time system metrics
+ */
+export interface SystemMetrics {
+  cpuPercent: number;
+  memoryPercent: number;
+  gpuPercent?: number;
+  gpuMemoryPercent?: number;
+  temperature?: number;
+}
+
+/**
+ * Collect real-time system metrics
+ * Returns CPU utilization, memory usage, and GPU metrics where available
+ */
+export async function collectSystemMetrics(): Promise<SystemMetrics> {
+  const cpuPercent = await getCpuUtilization();
+  const memoryPercent = getMemoryUtilization();
+
+  // Get GPU metrics for Apple Silicon or NVIDIA
+  const gpuMetrics = await getGpuMetrics();
+
+  const metrics: SystemMetrics = {
+    cpuPercent,
+    memoryPercent,
+  };
+
+  if (gpuMetrics.gpuPercent !== undefined) {
+    metrics.gpuPercent = gpuMetrics.gpuPercent;
+  }
+  if (gpuMetrics.gpuMemoryPercent !== undefined) {
+    metrics.gpuMemoryPercent = gpuMetrics.gpuMemoryPercent;
+  }
+  if (gpuMetrics.temperature !== undefined) {
+    metrics.temperature = gpuMetrics.temperature;
+  }
+
+  return metrics;
+}
+
+/**
+ * Get CPU utilization percentage
+ * Uses a 1-second sample to calculate accurate usage
+ */
+async function getCpuUtilization(): Promise<number> {
+  const platform = os.platform();
+
+  if (platform === 'darwin') {
+    // macOS: Use top command for quick CPU sample
+    try {
+      const result = execSync(
+        'top -l 1 -n 0 | grep "CPU usage"',
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 5000 }
+      );
+      // Parse: "CPU usage: 5.55% user, 8.33% sys, 86.11% idle"
+      const match = result.match(/(\d+\.?\d*)% user.*?(\d+\.?\d*)% sys.*?(\d+\.?\d*)% idle/);
+      if (match && match[1] && match[2]) {
+        const user = parseFloat(match[1]);
+        const sys = parseFloat(match[2]);
+        return Math.round((user + sys) * 10) / 10;
+      }
+    } catch {
+      // Fallback to load average based estimate
+      const loadAvg = os.loadavg()[0] ?? 0;
+      const cpuCount = os.cpus().length;
+      return Math.min(100, Math.round((loadAvg / cpuCount) * 100 * 10) / 10);
+    }
+  } else if (platform === 'linux') {
+    // Linux: Read from /proc/stat
+    try {
+      const stat1 = execSync('cat /proc/stat | head -1', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+      await new Promise(resolve => setTimeout(resolve, 100)); // Brief sample
+      const stat2 = execSync('cat /proc/stat | head -1', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+
+      const parse = (line: string) => {
+        const parts = line.split(/\s+/).slice(1).map(Number);
+        const idle = (parts[3] ?? 0) + (parts[4] ?? 0);
+        const total = parts.reduce((a, b) => a + b, 0);
+        return { idle, total };
+      };
+
+      const s1 = parse(stat1);
+      const s2 = parse(stat2);
+
+      const idleDiff = s2.idle - s1.idle;
+      const totalDiff = s2.total - s1.total;
+
+      if (totalDiff > 0) {
+        return Math.round((1 - idleDiff / totalDiff) * 1000) / 10;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  // Fallback: Use load average
+  const loadAvg = os.loadavg()[0] ?? 0;
+  const cpuCount = os.cpus().length;
+  return Math.min(100, Math.round((loadAvg / cpuCount) * 100 * 10) / 10);
+}
+
+/**
+ * Get memory utilization percentage
+ */
+function getMemoryUtilization(): number {
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  return Math.round((usedMem / totalMem) * 1000) / 10;
+}
+
+/**
+ * Get GPU metrics (Apple Silicon or NVIDIA)
+ */
+async function getGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number }> {
+  const platform = os.platform();
+  const cpus = os.cpus();
+  const isAppleSilicon = cpus[0]?.model.includes('Apple M');
+
+  if (isAppleSilicon && platform === 'darwin') {
+    return getAppleSiliconGpuMetrics();
+  } else if (platform === 'linux' || platform === 'win32') {
+    return getNvidiaGpuMetrics();
+  }
+
+  return {};
+}
+
+/**
+ * Get Apple Silicon GPU metrics using ioreg and powermetrics
+ */
+async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number }> {
+  const result: { gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number } = {};
+
+  try {
+    // Try to get GPU utilization from powermetrics (requires root)
+    // Since we can't run as root, we'll estimate from activity
+
+    // Use ioreg to get GPU busy percentage
+    const gpuBusy = execSync(
+      'ioreg -r -d 1 -c IOAccelerator | grep "PerformanceStatistics" -A 50 | grep "GPU Core Utilization" | head -1',
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }
+    );
+
+    // Parse: "GPU Core Utilization" = 42
+    const match = gpuBusy.match(/"GPU Core Utilization"\s*=\s*(\d+)/);
+    if (match && match[1]) {
+      result.gpuPercent = parseInt(match[1], 10);
+    }
+  } catch {
+    // ioreg approach failed, try alternative
+    try {
+      // Use vm_stat for memory pressure as proxy
+      const vmStat = execSync('vm_stat', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+      const pageSize = 16384; // Apple Silicon page size
+
+      const activeMatch = vmStat.match(/Pages active:\s+(\d+)/);
+      const wiredMatch = vmStat.match(/Pages wired down:\s+(\d+)/);
+      const totalMem = os.totalmem();
+
+      if (activeMatch && activeMatch[1] && wiredMatch && wiredMatch[1]) {
+        const activeBytes = parseInt(activeMatch[1], 10) * pageSize;
+        const wiredBytes = parseInt(wiredMatch[1], 10) * pageSize;
+        const usedBytes = activeBytes + wiredBytes;
+        result.gpuMemoryPercent = Math.round((usedBytes / totalMem) * 1000) / 10;
+      }
+    } catch {
+      // Can't get GPU metrics without elevated permissions
+    }
+  }
+
+  // Try to get temperature (requires sudo, will likely fail)
+  try {
+    // This command requires sudo on macOS
+    // powermetrics --samplers smc -i 1 -n 1 | grep "GPU die temperature"
+    // Since we can't run as sudo, temperature will be N/A
+  } catch {
+    // Expected to fail without sudo
+  }
+
+  return result;
+}
+
+/**
+ * Get NVIDIA GPU metrics using nvidia-smi
+ */
+async function getNvidiaGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number }> {
+  const result: { gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number } = {};
+
+  try {
+    const output = execSync(
+      'nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits',
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 5000 }
+    );
+
+    const parts = output.trim().split(',').map(s => s.trim());
+    if (parts.length >= 5 && parts[0] && parts[2] && parts[3] && parts[4]) {
+      result.gpuPercent = parseInt(parts[0], 10);
+      const memUsed = parseInt(parts[2], 10);
+      const memTotal = parseInt(parts[3], 10);
+      if (memTotal > 0) {
+        result.gpuMemoryPercent = Math.round((memUsed / memTotal) * 1000) / 10;
+      }
+      result.temperature = parseInt(parts[4], 10);
+    }
+  } catch {
+    // nvidia-smi not available or no GPU
+  }
+
+  return result;
+}
+
 export default detectHardware;

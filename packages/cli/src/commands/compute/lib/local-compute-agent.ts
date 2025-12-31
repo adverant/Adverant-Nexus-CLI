@@ -14,7 +14,7 @@ import os from 'os';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { detectHardware, type HardwareInfo } from './hardware-detection.js';
+import { detectHardware, collectSystemMetrics, type HardwareInfo, type SystemMetrics } from './hardware-detection.js';
 import { CredentialsManager } from '../../../auth/credentials-manager.js';
 import type {
   LocalComputeConfig,
@@ -716,6 +716,8 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
 
     if (this.userId) {
       headers['X-User-ID'] = this.userId;
+      // HPC Gateway also requires X-Tenant-ID for header-based auth
+      headers['X-Tenant-ID'] = this.userId;
     }
 
     return headers;
@@ -839,6 +841,18 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
     this.heartbeatTimer = setInterval(async () => {
       if (this.gatewayConnected && this.agentId) {
         try {
+          // Collect real-time system metrics
+          const metrics = await collectSystemMetrics();
+
+          // Build resource usage payload using collected metrics
+          const resourceUsage: SystemMetrics = {
+            cpuPercent: metrics.cpuPercent,
+            memoryPercent: metrics.memoryPercent,
+            ...(metrics.gpuPercent !== undefined && { gpuPercent: metrics.gpuPercent }),
+            ...(metrics.gpuMemoryPercent !== undefined && { gpuMemoryPercent: metrics.gpuMemoryPercent }),
+            ...(metrics.temperature !== undefined && { temperature: metrics.temperature }),
+          };
+
           const response = await fetch(`${this.config.gatewayUrl}/api/local-compute/heartbeat`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
@@ -849,6 +863,7 @@ export class LocalComputeAgent extends EventEmitter<ComputeEvents> {
                 id: this.currentJob.job.id,
                 name: this.currentJob.job.name,
               } : null,
+              resourceUsage,
             }),
           });
 
