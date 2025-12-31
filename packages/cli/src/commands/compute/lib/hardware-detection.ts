@@ -648,30 +648,46 @@ async function getGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?
 }
 
 /**
- * Get Apple Silicon GPU metrics using ioreg and powermetrics
+ * Get Apple Silicon GPU metrics using ioreg and osx-cpu-temp
  */
 async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number }> {
   const result: { gpuPercent?: number; gpuMemoryPercent?: number; temperature?: number } = {};
 
   try {
-    // Try to get GPU utilization from powermetrics (requires root)
-    // Since we can't run as root, we'll estimate from activity
-
-    // Use ioreg to get GPU busy percentage
-    const gpuBusy = execSync(
-      'ioreg -r -d 1 -c IOAccelerator | grep "PerformanceStatistics" -A 50 | grep "GPU Core Utilization" | head -1',
+    // Use ioreg to get GPU utilization from PerformanceStatistics
+    // This works without root access on macOS
+    // Use grep -o to extract just the key=value pairs
+    const gpuUtil = execSync(
+      'ioreg -r -d 1 -c IOAccelerator 2>/dev/null | grep -o \'"Device Utilization %"=[0-9]*\'',
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }
     );
 
-    // Parse: "GPU Core Utilization" = 42
-    const match = gpuBusy.match(/"GPU Core Utilization"\s*=\s*(\d+)/);
-    if (match && match[1]) {
-      result.gpuPercent = parseInt(match[1], 10);
+    // Parse: "Device Utilization %"=15
+    const utilMatch = gpuUtil.match(/"Device Utilization %"=(\d+)/);
+    if (utilMatch && utilMatch[1]) {
+      result.gpuPercent = parseInt(utilMatch[1], 10);
     }
   } catch {
-    // ioreg approach failed, try alternative
+    // GPU utilization not available
+  }
+
+  try {
+    // Get GPU memory usage
+    const gpuMem = execSync(
+      'ioreg -r -d 1 -c IOAccelerator 2>/dev/null | grep -o \'"In use system memory"=[0-9]*\'',
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }
+    );
+
+    // Parse: "In use system memory"=1350582272 (bytes)
+    const memMatch = gpuMem.match(/"In use system memory"=(\d+)/);
+    if (memMatch && memMatch[1]) {
+      const usedBytes = parseInt(memMatch[1], 10);
+      const totalMem = os.totalmem();
+      result.gpuMemoryPercent = Math.round((usedBytes / totalMem) * 1000) / 10;
+    }
+  } catch {
+    // ioreg approach failed, try vm_stat as fallback for memory
     try {
-      // Use vm_stat for memory pressure as proxy
       const vmStat = execSync('vm_stat', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
       const pageSize = 16384; // Apple Silicon page size
 
@@ -686,17 +702,30 @@ async function getAppleSiliconGpuMetrics(): Promise<{ gpuPercent?: number; gpuMe
         result.gpuMemoryPercent = Math.round((usedBytes / totalMem) * 1000) / 10;
       }
     } catch {
-      // Can't get GPU metrics without elevated permissions
+      // Can't get GPU metrics
     }
   }
 
-  // Try to get temperature (requires sudo, will likely fail)
+  // Try to get temperature using osx-cpu-temp (if installed via brew)
+  // Note: osx-cpu-temp returns 0.0°C on Apple Silicon M4, so we need to validate
   try {
-    // This command requires sudo on macOS
-    // powermetrics --samplers smc -i 1 -n 1 | grep "GPU die temperature"
-    // Since we can't run as sudo, temperature will be N/A
+    const tempOutput = execSync('osx-cpu-temp 2>/dev/null', {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+      timeout: 2000
+    });
+    // Output format: "65.0°C" or "65.0 C"
+    const tempMatch = tempOutput.match(/(\d+\.?\d*)\s*[°]?C/);
+    if (tempMatch && tempMatch[1]) {
+      const temp = parseFloat(tempMatch[1]);
+      // Only use temperature if it's reasonable (> 20°C, < 110°C)
+      // osx-cpu-temp returns 0°C on Apple Silicon which is invalid
+      if (temp > 20 && temp < 110) {
+        result.temperature = temp;
+      }
+    }
   } catch {
-    // Expected to fail without sudo
+    // osx-cpu-temp not installed or failed
   }
 
   return result;

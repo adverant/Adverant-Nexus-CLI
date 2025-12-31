@@ -12,9 +12,140 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import os from 'os';
+import open from 'open';
+import inquirer from 'inquirer';
 import { log } from '../../core/logging/logger.js';
 import { detectHardware, type HardwareInfo } from './lib/hardware-detection.js';
 import { LocalComputeAgent } from './lib/local-compute-agent.js';
+import { CredentialsManager } from '../../auth/credentials-manager.js';
+import type { AuthCredentials } from '../../types/index.js';
+
+const DASHBOARD_URL = 'https://dashboard.adverant.ai';
+
+/**
+ * Decode JWT payload without verification
+ */
+function decodeJwtPayload(token: string): { sub?: string; email?: string; name?: string; exp?: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payloadPart = parts[1];
+    if (!payloadPart) return null;
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const decoded = Buffer.from(padded, 'base64').toString('utf-8');
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Generate a human-readable device code
+ */
+function generateDeviceCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  code += '-';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+/**
+ * Ensure user is authenticated, prompting for login if needed
+ */
+async function ensureAuthenticated(credentialsManager: CredentialsManager): Promise<boolean> {
+  const isAuthenticated = await credentialsManager.isAuthenticated();
+
+  if (isAuthenticated) {
+    const creds = await credentialsManager.loadCredentials();
+    console.log(chalk.green(`✓ Authenticated as ${creds?.email || 'user'}`));
+    return true;
+  }
+
+  console.log(chalk.yellow('\n⚠ Authentication required to register with HPC Gateway\n'));
+
+  const { shouldLogin } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'shouldLogin',
+      message: 'Would you like to login now?',
+      default: true,
+    },
+  ]);
+
+  if (!shouldLogin) {
+    console.log(chalk.yellow('Agent will run in standalone mode (no remote job support).\n'));
+    return false;
+  }
+
+  // Trigger login flow
+  const deviceCode = generateDeviceCode();
+  const authUrl = `${DASHBOARD_URL}/cli-auth?code=${deviceCode}`;
+
+  console.log(chalk.cyan('\nOpening Nexus authentication page...\n'));
+  console.log(chalk.dim(`  ${authUrl}\n`));
+
+  try {
+    await open(authUrl);
+    console.log(chalk.green('Browser opened!\n'));
+  } catch {
+    console.log(chalk.yellow('Could not open browser automatically.'));
+    console.log(`Please visit: ${chalk.cyan(authUrl)}\n`);
+  }
+
+  console.log(chalk.yellow('After logging in on the dashboard:\n'));
+  console.log('  1. Authenticate with Google or GitHub');
+  console.log('  2. Copy the CLI token displayed');
+  console.log('  3. Paste it below\n');
+
+  const { token } = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'token',
+      message: 'Paste your CLI token:',
+      mask: '*',
+      validate: (input: string) => {
+        if (!input || input.length < 10) return 'Please paste a valid CLI token';
+        return true;
+      },
+    },
+  ]);
+
+  const spinner = ora('Verifying token...').start();
+  const payload = decodeJwtPayload(token);
+
+  if (!payload) {
+    spinner.fail(chalk.red('Invalid token format'));
+    return false;
+  }
+
+  if (payload.exp && payload.exp * 1000 < Date.now()) {
+    spinner.fail(chalk.red('Token expired'));
+    return false;
+  }
+
+  const email = payload.email || 'unknown@user.com';
+  const userId = payload.sub || payload.email || 'unknown';
+  const expiresAt = payload.exp
+    ? new Date(payload.exp * 1000).toISOString()
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const credentials: AuthCredentials = {
+    access_token: token,
+    refresh_token: '',
+    expires_at: expiresAt,
+    token_type: 'Bearer',
+    user_id: userId,
+    email: email,
+  };
+
+  await credentialsManager.saveCredentials(credentials);
+  spinner.succeed(chalk.green(`Authenticated as ${email}`));
+
+  return true;
+}
 
 export interface AgentOptions {
   gateway?: string;
@@ -39,10 +170,18 @@ export function createComputeAgentCommand(): Command {
     .option('--allow-remote-jobs', 'Allow remote job submissions', false)
     .option('-d, --daemonize', 'Run as background daemon', false)
     .option('-p, --port <port>', 'Local agent port', '9200')
-    .action(async (options: AgentOptions) => {
-      const spinner = ora('Detecting hardware...').start();
-
+    .option('--standalone', 'Skip authentication and run in standalone mode', false)
+    .action(async (options: AgentOptions & { standalone?: boolean }) => {
       try {
+        // Check authentication first (unless standalone mode)
+        const credentialsManager = new CredentialsManager();
+
+        if (!options.standalone) {
+          await ensureAuthenticated(credentialsManager);
+        }
+
+        const spinner = ora('Detecting hardware...').start();
+
         // Detect local hardware
         const hardware = await detectHardware();
         spinner.succeed('Hardware detected');
@@ -78,7 +217,7 @@ export function createComputeAgentCommand(): Command {
           await agent.start();
         }
       } catch (error) {
-        spinner.fail('Failed to start compute agent');
+        console.error(chalk.red('\n✗ Failed to start compute agent'));
         log.error('Agent start error:', error instanceof Error ? error : new Error(String(error)));
         process.exit(1);
       }

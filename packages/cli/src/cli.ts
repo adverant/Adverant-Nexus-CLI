@@ -28,7 +28,7 @@ import { CommandRegistry } from './core/router/command-registry.js';
 import { CommandRouter } from './core/router/command-router.js';
 
 // Command imports
-import { createLoginCommand, createRegisterCommand, createLogoutCommand, createWhoAmICommand } from './commands/auth/index.js';
+import { createLoginCommand, createSetTokenCommand, createRegisterCommand, createLogoutCommand, createWhoAmICommand } from './commands/auth/index.js';
 import { createListOrganizationsCommand, createCreateOrganizationCommand, createSwitchOrganizationCommand, createOrganizationInfoCommand } from './commands/org/index.js';
 import { createCreateAPIKeyCommand, createListAPIKeysCommand, createDeleteAPIKeyCommand, createAPIKeyInfoCommand, createRotateAPIKeyCommand } from './commands/api-key/index.js';
 import { createServicesCommand } from './commands/services/index.js';
@@ -101,6 +101,7 @@ function registerCommands(
     .description('Authentication commands');
 
   authCommand.addCommand(createLoginCommand(authClient, credentialsManager));
+  authCommand.addCommand(createSetTokenCommand(authClient, credentialsManager));
   authCommand.addCommand(createRegisterCommand(authClient, credentialsManager));
   authCommand.addCommand(createLogoutCommand(authClient, credentialsManager));
   authCommand.addCommand(createWhoAmICommand(authClient, credentialsManager));

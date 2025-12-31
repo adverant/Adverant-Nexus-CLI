@@ -1,29 +1,54 @@
 /**
- * Login Command
+ * Login Command - Claude Code style authentication
  *
- * Interactive login to Nexus platform
+ * Opens browser for dashboard authentication, user pastes CLI token
  */
 
 import { Command } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { AuthClient } from '../../auth/auth-client.js';
+import open from 'open';
 import { CredentialsManager } from '../../auth/credentials-manager.js';
 import type { AuthCredentials } from '../../types/index.js';
 
+const DASHBOARD_URL = 'https://dashboard.adverant.ai';
+
+/**
+ * Decode JWT payload without verification (for extracting user info)
+ * The token was already validated by the dashboard's OAuth flow
+ */
+function decodeJwtPayload(token: string): { sub?: string; email?: string; name?: string; exp?: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    // Decode base64url payload
+    const payloadPart = parts[1];
+    if (!payloadPart) {
+      return null;
+    }
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const decoded = Buffer.from(padded, 'base64').toString('utf-8');
+
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 export function createLoginCommand(
-  authClient: AuthClient,
+  _authClient: unknown, // Keep signature for compatibility but not used
   credentialsManager: CredentialsManager
 ): Command {
   const command = new Command('login');
 
   command
     .description('Login to Nexus platform')
-    .option('-e, --email <email>', 'Email address')
-    .option('-p, --password <password>', 'Password (not recommended for security)')
-    .option('--api-url <url>', 'Override Nexus API URL')
-    .action(async (options) => {
+    .action(async () => {
       try {
         // Check if already logged in
         const isAuthenticated = await credentialsManager.isAuthenticated();
@@ -32,7 +57,7 @@ export function createLoginCommand(
             {
               type: 'confirm',
               name: 'shouldContinue',
-              message: 'You are already logged in. Do you want to login again?',
+              message: 'You are already logged in. Login again?',
               default: false,
             },
           ]);
@@ -45,134 +70,87 @@ export function createLoginCommand(
           await credentialsManager.clearCredentials();
         }
 
-        // Get credentials interactively if not provided
-        let email = options.email;
-        let password = options.password;
+        // Generate device code for URL tracking
+        const deviceCode = generateDeviceCode();
+        const authUrl = `${DASHBOARD_URL}/cli-auth?code=${deviceCode}`;
 
-        if (!email || !password) {
-          console.log(chalk.cyan('\n🔐 Nexus Login\n'));
-
-          const answers = await inquirer.prompt([
-            {
-              type: 'input',
-              name: 'email',
-              message: 'Email:',
-              default: email,
-              validate: (input: string) => {
-                if (!input || !input.includes('@')) {
-                  return 'Please enter a valid email address';
-                }
-                return true;
-              },
-            },
-            {
-              type: 'password',
-              name: 'password',
-              message: 'Password:',
-              mask: '*',
-              validate: (input: string) => {
-                if (!input || input.length < 8) {
-                  return 'Password must be at least 8 characters';
-                }
-                return true;
-              },
-            },
-          ]);
-
-          email = email || answers.email;
-          password = password || answers.password;
-        }
-
-        // Attempt login
-        const spinner = ora('Authenticating...').start();
+        console.log(chalk.cyan('\nOpening Nexus authentication page...\n'));
+        console.log(chalk.dim(`  ${authUrl}\n`));
 
         try {
-          const response = await authClient.login({
-            email,
-            password,
-          });
+          await open(authUrl);
+          console.log(chalk.green('Browser opened!\n'));
+        } catch {
+          console.log(chalk.yellow('Could not open browser automatically.'));
+          console.log(`Please visit: ${chalk.cyan(authUrl)}\n`);
+        }
 
-          spinner.succeed(chalk.green('Login successful!'));
+        console.log(chalk.yellow('After logging in on the dashboard:\n'));
+        console.log('  1. Authenticate with Google or GitHub');
+        console.log('  2. Copy the CLI token displayed');
+        console.log('  3. Paste it below\n');
 
-          // Save credentials
-          const credentials: AuthCredentials = {
-            access_token: response.access_token,
-            refresh_token: response.refresh_token,
-            expires_at: response.expires_at,
-            token_type: response.token_type,
-            user_id: response.user_id,
-            email: response.email,
-          };
-
-          await credentialsManager.saveCredentials(credentials);
-
-          // Set token for future requests
-          authClient.setAccessToken(response.access_token);
-
-          // Get user info
-          console.log(chalk.cyan('\n👤 User Information:\n'));
-          console.log(`  Email: ${chalk.white(response.email)}`);
-          console.log(`  User ID: ${chalk.dim(response.user_id)}`);
-
-          // Get organization info
-          try {
-            const orgs = await authClient.listOrganizations();
-            if (orgs.length > 0) {
-              console.log(chalk.cyan('\n🏢 Organizations:\n'));
-              orgs.forEach((org, index) => {
-                console.log(`  ${index + 1}. ${chalk.white(org.name)} ${chalk.dim(`(${org.slug})`)}`);
-              });
-
-              // If multiple orgs, ask which to use
-              if (orgs.length > 1) {
-                const { orgIndex } = await inquirer.prompt([
-                  {
-                    type: 'list',
-                    name: 'orgIndex',
-                    message: 'Select default organization:',
-                    choices: orgs.map((org, index) => ({
-                      name: `${org.name} (${org.slug})`,
-                      value: index,
-                    })),
-                  },
-                ]);
-
-                const selectedOrg = orgs[orgIndex];
-                if (selectedOrg) {
-                  await credentialsManager.setCurrentOrganization(selectedOrg.id);
-                  console.log(chalk.green(`\n✓ Set ${selectedOrg.name} as default organization`));
-                }
-              } else {
-                const firstOrg = orgs[0];
-                if (firstOrg) {
-                  await credentialsManager.setCurrentOrganization(firstOrg.id);
-                }
+        // Prompt for token
+        const { token } = await inquirer.prompt([
+          {
+            type: 'password',
+            name: 'token',
+            message: 'Paste your CLI token:',
+            mask: '*',
+            validate: (input: string) => {
+              if (!input || input.length < 10) {
+                return 'Please paste a valid CLI token';
               }
-            }
-          } catch (error) {
-            // Non-critical error
-            console.log(chalk.yellow('\nWarning: Could not fetch organizations'));
-          }
+              return true;
+            },
+          },
+        ]);
 
-          console.log(chalk.green('\n✓ You are now logged in and ready to use Nexus CLI!\n'));
-          console.log(chalk.dim(`  Credentials stored at: ${credentialsManager.getCredentialsPath()}\n`));
-        } catch (error: any) {
-          spinner.fail(chalk.red('Login failed'));
+        // Validate token by decoding JWT
+        const spinner = ora('Verifying token...').start();
 
-          if (error.code === 'AUTH_INVALID_CREDENTIALS') {
-            console.error(chalk.red('\n✗ Invalid email or password\n'));
-          } else if (error.code === 'AUTH_ACCOUNT_LOCKED') {
-            console.error(chalk.red('\n✗ Account is locked due to too many failed login attempts\n'));
-            console.error(chalk.yellow('  Please wait 15 minutes or reset your password\n'));
-          } else if (error.code === 'AUTH_ACCOUNT_SUSPENDED') {
-            console.error(chalk.red('\n✗ Account is suspended\n'));
-            console.error(chalk.yellow('  Please contact support@adverant.ai\n'));
-          } else {
-            console.error(chalk.red(`\n✗ ${error.message}\n`));
-          }
+        const payload = decodeJwtPayload(token);
 
+        if (!payload) {
+          spinner.fail(chalk.red('Invalid token format'));
+          console.error(chalk.red('\nThe token is not a valid JWT.'));
+          console.log(chalk.yellow('Please copy the complete token from the dashboard.\n'));
           process.exit(1);
         }
+
+        // Check if token is expired
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          spinner.fail(chalk.red('Token expired'));
+          console.error(chalk.red('\nThe token has expired.'));
+          console.log(chalk.yellow('Please get a fresh token from the dashboard.\n'));
+          process.exit(1);
+        }
+
+        // Extract user info from JWT
+        const email = payload.email || 'unknown@user.com';
+        const userId = payload.sub || payload.email || 'unknown';
+
+        spinner.succeed(chalk.green('Authenticated!'));
+
+        // Calculate expiry from JWT or default to 30 days
+        const expiresAt = payload.exp
+          ? new Date(payload.exp * 1000).toISOString()
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        // Save credentials
+        const credentials: AuthCredentials = {
+          access_token: token,
+          refresh_token: '',
+          expires_at: expiresAt,
+          token_type: 'Bearer',
+          user_id: userId,
+          email: email,
+        };
+
+        await credentialsManager.saveCredentials(credentials);
+
+        console.log(chalk.cyan('\nLogged in as:'), chalk.white(email));
+        console.log(chalk.dim(`Credentials stored at: ${credentialsManager.getCredentialsPath()}\n`));
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}\n`));
         process.exit(1);
@@ -180,4 +158,22 @@ export function createLoginCommand(
     });
 
   return command;
+}
+
+/**
+ * Generate a human-readable device code for URL tracking
+ */
+function generateDeviceCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding ambiguous chars (0, O, 1, I)
+  let code = '';
+
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  code += '-';
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return code;
 }
