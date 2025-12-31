@@ -120,17 +120,18 @@ write_temperature() {
     # Try thermal sampler (shows thermal pressure state)
     pm_output=$(powermetrics --samplers thermal -i 1 -n 1 2>/dev/null || true)
 
-    # Check for thermal level (Nominal, Fair, Serious, Critical)
+    # Check for pressure level (Nominal, Fair, Serious, Critical)
+    # M4 output format: "Current pressure level: Nominal"
     local thermal_level
-    thermal_level=$(echo "$pm_output" | grep -i "Thermal level" | head -1 | awk '{print $NF}')
+    thermal_level=$(echo "$pm_output" | grep -i "pressure level" | head -1 | awk '{print $NF}')
     if [ -n "$thermal_level" ]; then
       thermal_state="$thermal_level"
-      # Convert thermal level to approximate temperature
+      # Convert thermal pressure level to approximate temperature
       case "$thermal_level" in
-        "Nominal") soc_temp="45" ;;  # Estimated
-        "Fair") soc_temp="65" ;;
-        "Serious") soc_temp="80" ;;
-        "Critical") soc_temp="95" ;;
+        "Nominal") soc_temp="42" ;;  # Normal operating temp
+        "Fair") soc_temp="65" ;;     # Moderate load
+        "Serious") soc_temp="85" ;;  # Heavy throttling imminent
+        "Critical") soc_temp="95" ;; # Thermal emergency
       esac
     fi
 
